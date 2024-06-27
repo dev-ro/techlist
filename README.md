@@ -1,4 +1,4 @@
-# [Techlist.me](https://techlist.me)
+# [Techlist.me](https://techlist.me) (MVP will be ready in late August)
 
 **Techlist.me** is a comprehensive tool designed to assist job seekers, especially those in data science, in identifying the current technology stacks most in demand by employers. By automating the collection and analysis of job postings from major job boards like Indeed, Glassdoor, and LinkedIn, Techlist.me provides valuable insights into the skills and tools that are crucial for landing a job in tech.
 
