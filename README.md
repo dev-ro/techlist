@@ -1,4 +1,4 @@
-# Techlist.me
+# [Techlist.me](https://techlist.me)
 
 **Techlist.me** is a comprehensive tool designed to assist job seekers, especially those in data science, in identifying the current technology stacks most in demand by employers. By automating the collection and analysis of job postings from major job boards like Indeed, Glassdoor, and LinkedIn, Techlist.me provides valuable insights into the skills and tools that are crucial for landing a job in tech.
 
@@ -12,7 +12,7 @@
   - Utilizes Named Entity Recognition and Hugging Face transformers to extract key information about tech stacks from job descriptions.
 
 - **User-Friendly Dashboard:**
-  - Built with React and CSS, the dashboard allows users to search for specific jobs, companies, or industries and view the relevant tech stack information.
+  - Built with React, CSS, and Streamlit, the dashboard allows users to search for specific jobs, companies, or industries and view the relevant tech stack information.
   - Features intuitive search and filter functionalities to enhance user experience.
 
 - **Data Analysis and Visualization:**
@@ -22,7 +22,7 @@
 ## Technical Stack
 
 - **Backend:** Flask (Python) or Go (TBD)
-- **Frontend:** React, CSS
+- **Frontend:** React, CSS, Streamlit
 - **Cloud Hosting:** Azure
 - **Web Scraping:** Beautiful Soup (Python)
 - **NLP Libraries:** Hugging Face Transformers
@@ -61,4 +61,3 @@
 
 - **Prototype:**
   - Created a spreadsheet shared on Slack, indicating high interest but low response rate.
-  
