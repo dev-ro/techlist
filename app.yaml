@@ -1,9 +1,11 @@
 runtime: custom
 env: flex
 
+instance_class: F2
+
 resources:
-  cpu: 1
-  memory_gb: 1
+  cpu: 2
+  memory_gb: 4
   disk_size_gb: 20
 
 automatic_scaling:
