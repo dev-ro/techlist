@@ -37,7 +37,7 @@ The data presented on techlist.me is collected from various job boards and compa
 
 techlist.me aims to provide actionable insights to help job seekers align their skills with market demand and assist employers in understanding current hiring trends. I hope you find this platform useful and informative.
 
-For any feedback or inquiries, please contact me at [support@techlist.me](mailto:kyle@techlist.me).
+For any feedback or inquiries, please contact me at [kyle@techlist.me](mailto:kyle@techlist.me).
 
 ---
 
