@@ -29,7 +29,7 @@ The data presented on techlist.me is collected from various job boards and compa
 ## How to Use
 
 1. **Select a Job Title Keyword**: Use the dropdown menu to choose a specific job title or select "All Data Related Jobs" to view aggregate data.
-2. **Explore Visualizations**: View the top 25 in-demand hard skills, tech stack, soft skills, industries, and benefits for the selected job title.
+2. **Explore Visualizations**: View the top in-demand hard skills, tech stack, soft skills, industries, and benefits for the selected job title.
 3. **Analyze Salaries**: Get insights into average minimum and maximum salaries for the selected job title.
 4. **Company Exclusions**: Note that certain companies (recruiters and consultants) have been excluded to ensure the accuracy of the data.
 
@@ -44,5 +44,3 @@ For any feedback or inquiries, please contact me at [kyle@techlist.me](mailto:ky
 ### Disclaimer
 
 The data presented on techlist.me is based on job postings and may not fully represent the entire job market. I continuously strive to improve data collection and analysis methods to provide the most accurate and up-to-date information.
-
----

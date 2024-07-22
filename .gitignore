@@ -1,3 +1,5 @@
 .env
 scratch.ipynb
 data/embeddings
+keys/*
+.streamlit/secrets.toml

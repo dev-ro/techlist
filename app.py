@@ -6,6 +6,10 @@ from collections import Counter
 import altair as alt
 import numpy as np
 
+from google.oauth2 import service_account
+import pandas_gbq
+
+
 # Set page configuration
 st.set_page_config(
     page_title="techlist.me",  # Title of the web page
@@ -31,29 +35,63 @@ with st.expander("Introduction"):
     intro
 
 with st.container():
-    # Directory containing the JSON files
-    directory = "data/extracted/gemini"
 
     @st.cache_data
     def load_data():
+        sql = """
+        SELECT created_on, keyword, company, title, summary, url, hard_skills, tech_stack, soft_skills, industries, salary, benefits FROM `extracted_data.jobs`
+        ORDER BY created_on
+        """
 
-        # List to hold all job entries
-        all_jobs = []
-        # Loop through the files and read each JSON file
-        for filename in os.listdir(directory):
-            if filename.endswith(".json"):
-                with open(
-                    os.path.join(directory, filename), "r", encoding="utf-8"
-                ) as file:
-                    jobs = json.load(file)
-                    all_jobs.extend(jobs)
+        credentials = service_account.Credentials.from_service_account_file(
+            "keys/gbq.json",
+        )
 
-        # Convert the list of dictionaries to a DataFrame
-        data = pd.DataFrame(all_jobs)
+        # TODO: Set project_id to your Google Cloud Platform project ID.
+        project_id = "techlistme"
+        # TODO: Set table_id to the full destination table ID (including the
+        #       dataset ID).
+        table_id = "extracted_data.jobs"
+
+        # Load data from BigQuery
+        data = pandas_gbq.read_gbq(
+            sql,
+            project_id=project_id,
+            table_id=table_id,
+            credentials=credentials,
+            use_bqstorage_api=True,
+        )
         return data
 
     data = load_data()
     data = data.dropna(subset=["summary"])
+
+    def convert_strings_to_lists(df, column_name):
+        df[column_name] = df[column_name].apply(
+            lambda x: x.split(",") if pd.notna(x) else []
+        )
+        return df
+
+    columns_with_lists = [
+        "tech_stack",
+        "soft_skills",
+        "hard_skills",
+        "industries",
+        "benefits",
+    ]
+    # Convert column
+    for column in columns_with_lists:
+        data = convert_strings_to_lists(data, column)
+
+    # Function to convert string to dictionary
+    def convert_salary_string_to_dict(salary_str):
+        try:
+            return json.loads(salary_str)
+        except json.JSONDecodeError:
+            return {}
+
+    # Apply conversion to the salary column
+    data["salary"] = data["salary"].apply(convert_salary_string_to_dict)
 
     # Function to replace words in lists
     def replace_words_in_list(data, column_name, replacements):
@@ -172,9 +210,12 @@ with st.container():
         all_items = []
         for item in column_data:
             if isinstance(item, list):
-                all_items.extend([i.lower() for i in item])
+                # Filter out empty lists and extend with lowercased items
+                if item:
+                    all_items.extend([i.lower() for i in item if i])
             elif isinstance(item, str):
-                all_items.append(item.lower())
+                if item:
+                    all_items.append(item.lower())
         return Counter(all_items)
 
     # Function to calculate median min and max salary
@@ -213,7 +254,7 @@ with st.container():
     st.write(f"Average Maximum Salary for {keyword}: ${max_salary:,.2f}")
 
     st.write(f"Count of Job Postings for {keyword}: {filtered_data.shape[0]}")
-
+    n = st.slider("Number of Top Elements to Display", 5, 50, 25)
     # Check if filtered_data is not empty before processing
     if not filtered_data.empty:
         # Count frequency of words in each category
@@ -226,22 +267,22 @@ with st.container():
 
         # Convert frequency counts to DataFrame for plotting and sort them
         hard_skills_df = pd.DataFrame(
-            hard_skills_freq.most_common(25), columns=["Skill", "Frequency"]
+            hard_skills_freq.most_common(n), columns=["Skill", "Frequency"]
         )
         tech_stack_df = pd.DataFrame(
-            tech_stack_freq.most_common(25), columns=["Tech", "Frequency"]
+            tech_stack_freq.most_common(n), columns=["Tech", "Frequency"]
         )
         soft_skills_df = pd.DataFrame(
-            soft_skills_freq.most_common(25), columns=["Skill", "Frequency"]
+            soft_skills_freq.most_common(n), columns=["Skill", "Frequency"]
         )
         industries_df = pd.DataFrame(
-            industries_freq.most_common(25), columns=["Industry", "Frequency"]
+            industries_freq.most_common(n), columns=["Industry", "Frequency"]
         )
         companies_df = pd.DataFrame(
-            companies_freq.most_common(25), columns=["Company", "Frequency"]
+            companies_freq.most_common(n), columns=["Company", "Frequency"]
         )
         benefits_df = pd.DataFrame(
-            benefits_freq.most_common(25), columns=["Benefit", "Frequency"]
+            benefits_freq.most_common(n), columns=["Benefit", "Frequency"]
         )
 
         # Plotting bar charts with Altair
@@ -267,7 +308,7 @@ with st.container():
                 tech_stack_df,
                 "Tech",
                 "Frequency",
-                f"Top 25 In-Demand Tech Stack for {keyword}",
+                f"Top {n} In-Demand Tech Stack for {keyword}",
             ),
             use_container_width=True,
         )
@@ -278,7 +319,7 @@ with st.container():
                 hard_skills_df,
                 "Skill",
                 "Frequency",
-                f"Top 25 In-Demand Hard Skills for {keyword}",
+                f"Top {n} In-Demand Hard Skills for {keyword}",
             ),
             use_container_width=True,
         )
@@ -289,7 +330,7 @@ with st.container():
                 soft_skills_df,
                 "Skill",
                 "Frequency",
-                f"Top 25 In-Demand Soft Skills for {keyword}",
+                f"Top {n} In-Demand Soft Skills for {keyword}",
             ),
             use_container_width=True,
         )
@@ -300,7 +341,7 @@ with st.container():
                 industries_df,
                 "Industry",
                 "Frequency",
-                f"Top 25 In-Demand Industries for {keyword}",
+                f"Top {n} In-Demand Industries for {keyword}",
             ),
             use_container_width=True,
         )
@@ -319,7 +360,7 @@ with st.container():
         st.header(f"Top Benefits for {keyword}")
         st.altair_chart(
             plot_bar_chart(
-                benefits_df, "Benefit", "Frequency", f"Top 25 Benefits for {keyword}"
+                benefits_df, "Benefit", "Frequency", f"Top {n} Benefits for {keyword}"
             ),
             use_container_width=True,
         )
@@ -341,26 +382,9 @@ with st.container():
     )
     st.write(f"Number of excluded job postings: {excluded_jobs_count}")
 
-
     """
 
     ## Data Table
 
     """
-    filtered_data[
-        [
-            "created_on",
-            "keyword",
-            "location",
-            "company",
-            "title",
-            "summary",
-            "url",
-            "hard_skills",
-            "tech_stack",
-            "soft_skills",
-            "industries",
-            "salary",
-            "benefits",
-        ]
-    ]
+    filtered_data
