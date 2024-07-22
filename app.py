@@ -51,13 +51,12 @@ with st.container():
         project_id = "techlistme"
         # TODO: Set table_id to the full destination table ID (including the
         #       dataset ID).
-        table_id = "extracted_data.jobs"
+        # table_id = "extracted_data.jobs"
 
         # Load data from BigQuery
         data = pandas_gbq.read_gbq(
             sql,
             project_id=project_id,
-            table_id=table_id,
             credentials=credentials,
             use_bqstorage_api=True,
         )
