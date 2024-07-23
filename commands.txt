@@ -1,10 +1,32 @@
 kubectl create secret generic gbq --from-file=gbq.json=./keys/gbq.json
 
+
+cd collect_job_listings
+docker build -t gcr.io/techlistme/collect-job-listings:latest .
+docker push gcr.io/techlistme/collect-job-listings:latest
+cd ..
+
+cd clean_duplicate_ids
+docker build -t gcr.io/techlistme/clean-duplicate-ids:latest .
+docker push gcr.io/techlistme/clean-duplicate-ids:latest
+cd ..
+
 cd enrich_job_listings
 docker build -t gcr.io/techlistme/enrich-job-listings:latest .
 docker push gcr.io/techlistme/enrich-job-listings:latest
-kubectl apply -f enrich-job-listings-job.yaml
+cd ..
 
+cd clean_duplicate_descriptions
+docker build -t gcr.io/techlistme/clean-duplicate-descriptions:latest .
+docker push gcr.io/techlistme/clean-duplicate-descriptions:latest
+cd ..
+
+cd extract_gemini
+docker build -t gcr.io/techlistme/extract-gemini:latest .
+docker push gcr.io/techlistme/extract-gemini:latest
+cd ..
+
+kubectl apply -f k8s/
 
 pipeline order: 
 1 - collect_job_listings
@@ -13,9 +35,7 @@ pipeline order:
 4 - clean_duplicate_descriptions
 5 - extract_gemini
 
-kubectl apply -f k8s/
 
-
-recover big query table from an hour ago
+how to recover big query table from an hour ago
 command:
 bq cp techlistme:raw_data.jobs@-3600000 techlistme:raw_data.jobs_recovered
