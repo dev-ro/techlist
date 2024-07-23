@@ -4,3 +4,18 @@ cd enrich_job_listings
 docker build -t gcr.io/techlistme/enrich-job-listings:latest .
 docker push gcr.io/techlistme/enrich-job-listings:latest
 kubectl apply -f enrich-job-listings-job.yaml
+
+
+pipeline order: 
+1 - collect_job_listings
+2 - clean_duplicate_ids
+3 - enrich_job_listings
+4 - clean_duplicate_descriptions
+5 - extract_gemini
+
+kubectl apply -f k8s/
+
+
+recover big query table from an hour ago
+command:
+bq cp techlistme:raw_data.jobs@-3600000 techlistme:raw_data.jobs_recovered

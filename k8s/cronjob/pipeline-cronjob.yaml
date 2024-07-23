@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekly-data-pipeline
+spec:
+  schedule: "0 0 * * 0"  # Run at midnight every Sunday
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: pipeline-runner
+          containers:
+          - name: pipeline-runner
+            image: bitnami/kubectl:latest
+            command: ["/bin/bash", "/scripts/run-pipeline.sh"]
+            volumeMounts:
+            - name: pipeline-script
+              mountPath: /scripts
+          restartPolicy: OnFailure
+          volumes:
+          - name: pipeline-script
+            configMap:
+              name: pipeline-script
+              defaultMode: 0755

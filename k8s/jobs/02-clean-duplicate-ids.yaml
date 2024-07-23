@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: collect-job-listings
+  name: clean-duplicate-ids
 spec:
   template:
     spec:
       containers:
-      - name: collect-job-listings
-        image: gcr.io/techlistme/collect-job-listings:latest
+      - name: clean-duplicate-ids
+        image: gcr.io/techlistme/clean-duplicate-ids:latest
         imagePullPolicy: Always
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
@@ -15,6 +15,7 @@ spec:
         volumeMounts:
         - name: credentials
           mountPath: /app/keys
+          readOnly: true
       restartPolicy: OnFailure
       volumes:
       - name: credentials

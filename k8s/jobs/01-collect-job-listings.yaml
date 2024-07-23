@@ -15,6 +15,7 @@ spec:
         volumeMounts:
         - name: credentials
           mountPath: /app/keys
+          readOnly: true
       restartPolicy: OnFailure
       volumes:
       - name: credentials

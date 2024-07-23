@@ -15,7 +15,7 @@ spec:
         volumeMounts:
         - name: credentials
           mountPath: /app/keys
-      restartPolicy: Never
+      restartPolicy: OnFailure
       volumes:
       - name: credentials
         secret:
