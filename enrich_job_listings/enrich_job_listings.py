@@ -6,6 +6,7 @@ import pandas as pd
 import pandas_gbq
 from google.oauth2 import service_account
 from google.cloud import bigquery
+from fake_useragent import UserAgent
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -21,6 +22,8 @@ dataset_id = "raw_data"
 table_id = "jobs"
 
 client = bigquery.Client(credentials=credentials, project=project_id)
+
+user_agent = UserAgent()
 
 def update_job_descriptions(job_data):
     df = pd.DataFrame(job_data)
@@ -59,7 +62,7 @@ def job_detail_request(job_id, retry_count=0):
     url = f"https://www.linkedin.com/jobs/view/{job_id}"
     try:
         start_time = time.time()
-        headers = {"User-Agent": "Mozilla/5.0"}
+        headers = {"User-Agent": user_agent.random}
         response = requests.get(url=url, headers=headers, timeout=5)
         elapsed = time.time() - start_time
         logging.info(

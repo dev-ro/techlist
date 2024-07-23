@@ -155,7 +155,7 @@ def clean(jobs):
 
 
 if __name__ == "__main__":
-    batch_size = 10
+    batch_size = 100
     offset = 0
 
     while True:
