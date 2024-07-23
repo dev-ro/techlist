@@ -16,9 +16,9 @@ spec:
             volumeMounts:
             - name: pipeline-script
               mountPath: /scripts
+              readOnly: true
           restartPolicy: OnFailure
           volumes:
           - name: pipeline-script
             configMap:
               name: pipeline-script
-              defaultMode: 0755
