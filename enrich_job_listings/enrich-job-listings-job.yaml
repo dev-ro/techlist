@@ -3,7 +3,7 @@ kind: Job
 metadata:
   name: enrich-job-listings
 spec:
-  parallelism: 3  # Run up to 3 pods in parallel
+  parallelism: 1  # Run up to 3 pods in parallel
   completions: 3  # Ensure 3 successful completions
   template:
     spec:
@@ -17,14 +17,14 @@ spec:
         - name: BATCH_SIZE
           value: "100"
         - name: MAX_WORKERS
-          value: "10"
+          value: "2"
         resources:
           requests:
             cpu: "500m"
             memory: "512Mi"
           limits:
-            cpu: "1"
-            memory: "1Gi"
+            cpu: "2"
+            memory: "2Gi"
         volumeMounts:
         - name: credentials
           mountPath: /app/keys

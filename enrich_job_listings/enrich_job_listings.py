@@ -49,7 +49,7 @@ def update_job_descriptions(job_data):
     client.delete_table(temp_table_id, not_found_ok=True)
     logging.info(f"Updated {len(job_data)} job descriptions in BigQuery")
 
-def job_detail_request(job_id, max_retries=7, base_delay=2):
+def job_detail_request(job_id, max_retries=8, base_delay=2):
     url = f"https://www.linkedin.com/jobs/view/{job_id}"
     for retry in range(max_retries):
         try:
@@ -79,7 +79,7 @@ def job_detail_request(job_id, max_retries=7, base_delay=2):
     logging.error(f"Failed to retrieve job_id: {job_id} after {max_retries} retries")
     return {"job_id": job_id, "description": "", "created_on": time.time(), "url": url}
 
-def enrich_jobs(batch_size=100, max_workers=10):
+def enrich_jobs(batch_size=100, max_workers=2):
     query = f"""
     SELECT job_id FROM `{project_id}.{dataset_id}.{table_id}`
     WHERE description IS NULL OR description = ""
