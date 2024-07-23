@@ -3,6 +3,8 @@ kind: Job
 metadata:
   name: enrich-job-listings
 spec:
+  parallelism: 3  # Run up to 3 pods in parallel
+  completions: 3  # Ensure 3 successful completions
   template:
     spec:
       containers:
@@ -12,12 +14,24 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app/keys/gbq.json
+        - name: BATCH_SIZE
+          value: "100"
+        - name: MAX_WORKERS
+          value: "10"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
         volumeMounts:
         - name: credentials
           mountPath: /app/keys
-      restartPolicy: Never
+          readOnly: true
+      restartPolicy: OnFailure
       volumes:
       - name: credentials
         secret:
           secretName: gbq
-  backoffLimit: 4
+  backoffLimit: 6

@@ -33,12 +33,18 @@ def clean_duplicate_ids():
     # Create a temporary table with unique job IDs
     clean_query = f"""
     CREATE OR REPLACE TABLE `{temp_table_id}` AS
-    SELECT * FROM (
-      SELECT *,
-             ROW_NUMBER() OVER (PARTITION BY job_id ORDER BY created_on DESC) AS row_num
-      FROM `{project_id}.{dataset_id}.{table_id}`
-    )
-    WHERE row_num = 1;
+    SELECT 
+        ANY_VALUE(description) as description,
+        ANY_VALUE(task_id) as task_id,
+        ANY_VALUE(keyword) as keyword,
+        ANY_VALUE(location) as location,
+        ANY_VALUE(company) as company,
+        ANY_VALUE(title) as title,
+        ANY_VALUE(url) as url,
+        job_id,
+        MAX(created_on) as created_on
+    FROM `{project_id}.{dataset_id}.{table_id}`
+    GROUP BY job_id;
     """
     client.query(clean_query).result()
 
