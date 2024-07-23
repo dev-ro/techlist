@@ -1,0 +1,6 @@
+kubectl create secret generic gbq --from-file=gbq.json=./keys/gbq.json
+
+cd enrich_job_listings
+docker build -t gcr.io/techlistme/enrich-job-listings:latest .
+docker push gcr.io/techlistme/enrich-job-listings:latest
+kubectl apply -f enrich-job-listings-job.yaml

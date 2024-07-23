@@ -3,8 +3,6 @@ kind: Job
 metadata:
   name: enrich-job-listings
 spec:
-  parallelism: 1  # Run up to 3 pods in parallel
-  completions: 3  # Ensure 3 successful completions
   template:
     spec:
       containers:
@@ -14,17 +12,13 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app/keys/gbq.json
-        - name: BATCH_SIZE
-          value: "100"
-        - name: MAX_WORKERS
-          value: "2"
         resources:
           requests:
-            cpu: "500m"
+            cpu: "250m"
             memory: "512Mi"
           limits:
-            cpu: "2"
-            memory: "2Gi"
+            cpu: "500m"
+            memory: "1Gi"
         volumeMounts:
         - name: credentials
           mountPath: /app/keys
