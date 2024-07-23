@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: extract-gemini
+spec:
+  template:
+    spec:
+      containers:
+      - name: extract-gemini
+        image: gcr.io/techlistme/extract-gemini:latest
+        imagePullPolicy: Always
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app/keys/gbq.json
+        volumeMounts:
+        - name: credentials
+          mountPath: /app/keys
+      restartPolicy: Never
+      volumes:
+      - name: credentials
+        secret:
+          secretName: gbq
+  backoffLimit: 4

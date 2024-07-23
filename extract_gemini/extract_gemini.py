@@ -128,6 +128,7 @@ def extract_job_description(jobs):
             response = model.generate_content(job["description"])
             new_fields = json.loads(response.text)
             job.update(new_fields)
+            job["created_on"] = time.time()
             updated_jobs.append(job)
             count_done += 1
 
