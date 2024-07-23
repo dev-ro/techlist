@@ -1,6 +1,5 @@
 import pandas as pd
 import json
-import os
 import streamlit as st
 from collections import Counter
 import altair as alt
@@ -36,7 +35,7 @@ with st.expander("Introduction"):
 
 with st.container():
 
-    @st.cache_data
+    @st.cache_data(ttl=3600)
     def load_data():
         sql = """
         SELECT created_on, keyword, company, title, summary, url, hard_skills, tech_stack, soft_skills, industries, salary, benefits FROM `extracted_data.jobs`

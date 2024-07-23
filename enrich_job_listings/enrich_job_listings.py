@@ -73,7 +73,7 @@ def job_detail_request(job_id, retry_count=0):
             description = (
                 description.getText(separator="\n", strip=True) if description else ""
             )
-            return {"job_id": job_id, "description": description, "created_on": time.time()}
+            return {"job_id": job_id, "description": description, "created_on": time.time(), "url": url} 
 
         elif response.status_code == 429:
             retry_after = int(response.headers.get("Retry-After", 2))
@@ -92,11 +92,11 @@ def job_detail_request(job_id, retry_count=0):
 
         if response.status_code in [400, 404]:
             logging.warning(f"Job ID: {job_id} may be invalid or deleted.")
-            return {"job_id": job_id, "description": "", "created_on": time.time()}
+            return {"job_id": job_id, "description": "", "created_on": time.time(), "url": url}
 
     except Exception as e:
         logging.error(f"Error in job_detail_request: {e}")
-        return {"job_id": job_id, "description": "", "created_on": time.time()}
+        return {"job_id": job_id, "description": "", "created_on": time.time(), "url": url}
 
 def enrich_jobs():
     # Load jobs without descriptions from BigQuery
