@@ -8,6 +8,7 @@ spec:
       containers:
       - name: collect-job-listings
         image: gcr.io/techlistme/collect-job-listings:latest
+        imagePullPolicy: Always
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app/keys/gbq.json

@@ -8,6 +8,7 @@ spec:
       containers:
       - name: clean-duplicate-ids
         image: gcr.io/techlistme/clean-duplicate-ids:latest
+        imagePullPolicy: Always
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app/keys/gbq.json

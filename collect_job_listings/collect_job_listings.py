@@ -101,7 +101,7 @@ def process_jobs(keyword, location, task_id):
         response = jobs_list_request(keyword=keyword, location=location, start=start)
 
         if response.status_code != 200:
-            if start >= 90:
+            if start >= 900:
                 break
 
             logging.warning("Waiting ...")

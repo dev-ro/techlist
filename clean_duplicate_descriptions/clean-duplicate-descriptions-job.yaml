@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: enrich-job-listings
+  name: clean-duplicate-descriptions
 spec:
   template:
     spec:
       containers:
-      - name: enrich-job-listings
-        image: gcr.io/techlistme/enrich-job-listings:latest
+      - name: collect-job-listings
+        image: gcr.io/techlistme/clean-duplicate-descriptions:latest
         imagePullPolicy: Always
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS

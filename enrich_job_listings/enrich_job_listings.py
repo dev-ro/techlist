@@ -3,6 +3,7 @@ import time
 import logging
 from bs4 import BeautifulSoup
 import pandas as pd
+import pandas_gbq
 from google.oauth2 import service_account
 from google.cloud import bigquery
 
@@ -28,7 +29,7 @@ def update_job_descriptions(job_data):
     
     # Load the data into a temporary table
     job_data_df = pd.DataFrame(job_data)
-    job_data_df.to_gbq(destination_table=temp_table_id, project_id=project_id, if_exists='replace', credentials=credentials)
+    pandas_gbq.to_gbq(job_data_df, temp_table_id, project_id, if_exists='replace', credentials=credentials)
 
     # Perform the MERGE operation
     merge_query = f"""
