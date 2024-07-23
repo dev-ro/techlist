@@ -79,10 +79,10 @@ def job_detail_request(job_id, max_retries=8, base_delay=2):
     logging.error(f"Failed to retrieve job_id: {job_id} after {max_retries} retries")
     return {"job_id": job_id, "description": "", "created_on": time.time(), "url": url}
 
-def enrich_jobs(batch_size=100, max_workers=2):
+def enrich_jobs(batch_size=100, max_workers=1):
     query = f"""
     SELECT job_id FROM `{project_id}.{dataset_id}.{table_id}`
-    WHERE description IS NULL OR description = ""
+    WHERE description IS NULL
     """
     job_ids = client.query(query).to_dataframe()["job_id"].tolist()
 
