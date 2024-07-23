@@ -26,7 +26,8 @@ docker build -t gcr.io/techlistme/extract-gemini:latest .
 docker push gcr.io/techlistme/extract-gemini:latest
 cd ..
 
-kubectl apply -f k8s/
+kubectl apply -f .\k8s\ --recursive --dry-run=client
+kubectl apply -f .\k8s\ --recursive
 
 pipeline order: 
 1 - collect_job_listings
