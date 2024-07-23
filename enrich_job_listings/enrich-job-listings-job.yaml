@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: enrich-job-listings
+spec:
+  template:
+    spec:
+      containers:
+      - name: enrich-job-listings
+        image: gcr.io/techlistme/enrich-job-listings:latest
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app/keys/gbq.json
+        volumeMounts:
+        - name: credentials
+          mountPath: /app/keys
+      restartPolicy: Never
+      volumes:
+      - name: credentials
+        secret:
+          secretName: gbq
+  backoffLimit: 4

@@ -184,7 +184,7 @@ def process_jobs(keyword, location, task_id):
         response = jobs_list_request(keyword=keyword, location=location, start=start)
 
         if response.status_code != 200:
-            if start >= 990:  # Changed limit to 990
+            if start >= 90:  # Changed limit to 90 from 990
                 break
 
             logging.warning("Waiting ...")
@@ -213,43 +213,43 @@ if __name__ == "__main__":
     load_jobs_from_pkl()  # Load existing jobs from PKL before starting
 
     keywords = [
-        # "Data Scientist",
-        # "ML Engineer",
-        # "Data Analyst",
-        # "Data Engineer",
-        # "Business Analyst",
-        # "Software Engineer",
-        # "MLOps Engineer",
-        # "AI Engineer",
-        # "Decision Scientist",
+        "Data Scientist",
+        "ML Engineer",
+        "Data Analyst",
+        "Data Engineer",
+        "Business Analyst",
+        "Software Engineer",
+        "MLOps Engineer",
+        "AI Engineer",
+        "Decision Scientist",
     ]
 
     locations = [
-        # "Michigan",
-        # "Illinois",
-        # "California",
-        # "New York",
-        # "Washington",
-        # "Texas",
-        # "Florida",
-        # "Massachusetts",
-        # "Wisconsin",
-        # "Georgia",
-        # "Washington D.C.",
-        # "United States",
+        "Michigan",
+        "Illinois",
+        "California",
+        "New York",
+        "Washington",
+        "Texas",
+        "Florida",
+        "Massachusetts",
+        "Wisconsin",
+        "Georgia",
+        "Washington D.C.",
+        "United States",
     ]
 
-    # for keyword in keywords:
-    #     for location in locations:
-    #         task_id = uuid.uuid4().hex
-    #         logging.info(f"total jobs: {len(all_jobs)} - keyword: {keyword} - location: {location}")
+    for keyword in keywords:
+        for location in locations:
+            task_id = uuid.uuid4().hex
+            logging.info(f"total jobs: {len(all_jobs)} - keyword: {keyword} - location: {location}")
 
-    #         process_jobs(keyword, location, task_id)
+            process_jobs(keyword, location, task_id)
 
-    # for job in all_jobs:
-    #     # print(job)
-    #     if 'description' not in job:
-    #         job_detail_request(job["job_id"])
+    for job in all_jobs:
+        # print(job)
+        if 'description' not in job:
+            job_detail_request(job["job_id"])
 
     df = pd.DataFrame(all_jobs)
     # convert NaN to "" for description
