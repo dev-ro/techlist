@@ -158,146 +158,24 @@ with st.container():
         if column in data.columns:
             replace_words_in_list(data, column, replacements)
 
+    
+    def get_blacklist_companies(project_id="techlistme"):
+        # SQL query to fetch company names from the blacklist table
+        query = """
+        SELECT company
+        FROM `extracted_data.blacklist`
+        """
+
+        # Execute the query and load results into a DataFrame
+        df = pandas_gbq.read_gbq(query, project_id=project_id)
+
+        # Convert the 'company' column to a list
+        blacklist_companies = df['company'].tolist()
+
+        return blacklist_companies
+    
     # Blacklist of companies
-    blacklist_companies = [
-        "synergisticit",
-        "intellectt inc",
-        "clearancejobs",
-        "steneral consulting",
-        "syntricate technologies",
-        "1872 consulting",
-        "acs consultancy services, inc",
-        "mygwork - lgbtq+ business community",
-        "zortech solutions",
-        "energy jobline",
-        "kyyba inc",
-        "motion recruitment",
-        "jobs via efinancialcareers",
-        "robert half",
-        "accroid inc",
-        "stellent it",
-        "software technology inc.",
-        "donato technologies, inc.",
-        "tekintegral",
-        "extend information systems inc.",
-        "keylent inc",
-        "kforce inc",
-        "ampcus inc",
-        "get it recruit - information technology",
-        "cybercoders",
-        "diverse lynx",
-        "remoteworker us",
-        "harnham",
-        "augment jobs",
-        "tata consulting company",
-        "tata consultancy services",
-        "clickjobs.io",
-        "jobot",
-        "TekWissen ®",
-        "dice",
-        "techtammina llc",
-        "cynet systems",
-        "iconma",
-        "spectraforce",
-        "agile tech labs",
-        "genesis10",
-        "insight global",
-        "ceres group",
-        "smartiplace",
-        "jobs malaysia - two95 hr hub",
-        "stellar professionals",
-        "lancesoft, inc.",
-        "divihn integration inc",
-        "wise skulls",
-        "cybertec, inc",
-        "lorven technologies inc.",
-        "georgia it, inc.",
-        "avid technology professionals",
-        "hcl global systems inc",
-        "excel hire staffing,llc",
-        "capgemini",
-        "randstad usa",
-        "v-soft consulting group, inc.",
-        "mission technologies, a division of hii",
-        "prohires",
-        "roberts recruiting, llc",
-        "caci international inc",
-        "mantech",
-        "belay technologies",
-        "mindlance",
-        "psrtek",
-        "info way solutions",
-        "the judge group",
-        "ziprecruiter",
-        "hexaquest global",
-        "captivation",
-        "conch technologies, inc",
-        "open systems technologies",
-        "acceler8 talent",
-        "alldus",
-        "clifyx",
-        "marathon ts",
-        "aptask",
-        "v2soft",
-        "hatchpros",
-        "aditi consulting",
-        "ltimindtree",
-        "software people inc.",
-        "lasalle network",
-        "compunnel inc.",
-        "guidehouse",
-        "intersources inc",
-        "ev.careers",
-        "resource informatics group, inc",
-        "htc global services",
-        "pyramid consulting, inc",
-        "artech l.l.c.",
-        "axelon services corporation",
-        "pi square technologies",
-        "enexus global inc.",
-        "algo capital group",
-        "anveta, inc",
-        "akraya, inc.",
-        "softworld, a kelly company",
-        "ascendion",
-        "akkodis",
-        "fasttek global",
-        "system soft technologies",
-        "sky consulting inc.",
-        "intelliswift software",
-        "qinetiq us (formerly avantus federal)",
-        "lhh",
-        "chelsoft solutions co.",
-        "serigor inc",
-        "us tech solutions",
-        "inspyr solutions",
-        "amtex systems inc.",
-        "shiftcode analytics, inc.",
-        "etek it services, inc.",
-        "integrated resources, inc ( iri )",
-        "eteam",
-        "applab systems, inc",
-        "selby jennings",
-        "lmi",
-        "cps, inc.",
-        "mindpal",
-        "usajobs",
-        "caterpillar inc.",
-        "systems technology group, inc. (stg)",
-        "team remotely inc",
-        "megan soft inc",
-        "inficare staffing",
-        "dcs corp",
-        "hexaware technologies",
-        "stanley reid",
-        "epitec",
-        "trispoke managed services pvt. ltd.",
-        "actalent",
-        "jesica.ai",
-        "stealth startup",
-        "paradyme, inc.",
-        "qinetiq us",
-    ]
+    blacklist_companies = get_blacklist_companies()
 
     # Convert company names to lowercase for case-insensitive comparison
     data["company"] = data["company"].str.lower()
@@ -492,15 +370,12 @@ with st.container():
     oldest_date = filtered_data["time_extracted"].min()
     most_recent_date = filtered_data["time_extracted"].max()
 
-    st.write(f"Oldest data pull: {oldest_date}")
-    st.write(f"Recent data pull: {most_recent_date}")
-
     excluded_companies = ", ".join(sorted(blacklist_companies))
 
     st.write(
         f"The following companies have been excluded from the analysis: {excluded_companies}"
     )
-    st.write(f"Number of excluded job postings: {excluded_jobs_count}")
+    # st.write(f"Number of excluded job postings: {excluded_jobs_count}")
 
     """
     ## Data Table
@@ -514,5 +389,8 @@ with st.container():
     else:
         filtered_data = filtered_data[filtered_data["company"].str.lower() == company.lower()]
 
+    st.write("Tip: Add more companies by adjusting the slider above the bar charts!")
     filtered_data
+    st.write(f"Oldest data pull: {oldest_date}")
+    st.write(f"Recent data pull: {most_recent_date}")
         
