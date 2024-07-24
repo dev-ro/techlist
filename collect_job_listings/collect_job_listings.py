@@ -25,7 +25,146 @@ credentials = service_account.Credentials.from_service_account_file("keys/gbq.js
 project_id = "techlistme"
 table_id = "raw_data.jobs"
 
-blacklist = ["SynergisticIT", "Intellectt Inc"]
+blacklist = [
+    "synergisticit",
+    "intellectt inc",
+    "clearancejobs",
+    "steneral consulting",
+    "syntricate technologies",
+    "1872 consulting",
+    "acs consultancy services, inc",
+    "mygwork - lgbtq+ business community",
+    "zortech solutions",
+    "energy jobline",
+    "kyyba inc",
+    "motion recruitment",
+    "jobs via efinancialcareers",
+    "robert half",
+    "accroid inc",
+    "stellent it",
+    "software technology inc.",
+    "donato technologies, inc.",
+    "tekintegral",
+    "extend information systems inc.",
+    "keylent inc",
+    "kforce inc",
+    "ampcus inc",
+    "get it recruit - information technology",
+    "cybercoders",
+    "diverse lynx",
+    "remoteworker us",
+    "harnham",
+    "augment jobs",
+    "tata consulting company",
+    "tata consultancy services",
+    "clickjobs.io",
+    "jobot",
+    "TekWissen ®",
+    "dice",
+    "techtammina llc",
+    "cynet systems",
+    "iconma",
+    "spectraforce",
+    "agile tech labs",
+    "genesis10",
+    "insight global",
+    "ceres group",
+    "smartiplace",
+    "jobs malaysia - two95 hr hub",
+    "stellar professionals",
+    "lancesoft, inc.",
+    "divihn integration inc",
+    "wise skulls",
+    "cybertec, inc",
+    "lorven technologies inc.",
+    "georgia it, inc.",
+    "avid technology professionals",
+    "hcl global systems inc",
+    "excel hire staffing,llc",
+    "capgemini",
+    "randstad usa",
+    "v-soft consulting group, inc.",
+    "mission technologies, a division of hii",
+    "prohires",
+    "roberts recruiting, llc",
+    "caci international inc",
+    "mantech",
+    "belay technologies",
+    "mindlance",
+    "psrtek",
+    "info way solutions",
+    "the judge group",
+    "ziprecruiter",
+    "hexaquest global",
+    "captivation",
+    "conch technologies, inc",
+    "open systems technologies",
+    "acceler8 talent",
+    "alldus",
+    "clifyx",
+    "marathon ts",
+    "aptask",
+    "v2soft",
+    "hatchpros",
+    "aditi consulting",
+    "ltimindtree",
+    "software people inc.",
+    "lasalle network",
+    "compunnel inc.",
+    "guidehouse",
+    "intersources inc",
+    "ev.careers",
+    "resource informatics group, inc",
+    "htc global services",
+    "pyramid consulting, inc",
+    "artech l.l.c.",
+    "axelon services corporation",
+    "pi square technologies",
+    "enexus global inc.",
+    "algo capital group",
+    "anveta, inc",
+    "akraya, inc.",
+    "softworld, a kelly company",
+    "ascendion",
+    "akkodis",
+    "fasttek global",
+    "system soft technologies",
+    "sky consulting inc.",
+    "intelliswift software",
+    "qinetiq us (formerly avantus federal)",
+    "lhh",
+    "chelsoft solutions co.",
+    "serigor inc",
+    "us tech solutions",
+    "inspyr solutions",
+    "amtex systems inc.",
+    "shiftcode analytics, inc.",
+    "etek it services, inc.",
+    "integrated resources, inc ( iri )",
+    "eteam",
+    "applab systems, inc",
+    "selby jennings",
+    "lmi",
+    "cps, inc.",
+    "mindpal",
+    "usajobs",
+    "caterpillar inc.",
+    "systems technology group, inc. (stg)",
+    "team remotely inc",
+    "megan soft inc",
+    "inficare staffing",
+    "dcs corp",
+    "hexaware technologies",
+    "stanley reid",
+    "epitec",
+    "trispoke managed services pvt. ltd.",
+    "actalent",
+    "jesica.ai",
+    "stealth startup",
+    "paradyme, inc.",
+    "qinetiq us",
+]
+
 
 # Load existing job IDs from BigQuery once
 def load_existing_job_ids():
@@ -35,11 +174,14 @@ def load_existing_job_ids():
     df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=credentials)
     return set(df["job_id"])
 
+
 # Store existing job IDs in memory
 existing_job_ids = load_existing_job_ids()
 
+
 def job_exists(job_id):
     return job_id in existing_job_ids
+
 
 def upload_to_bigquery(job_data):
     df = pd.DataFrame(job_data)
@@ -47,6 +189,7 @@ def upload_to_bigquery(job_data):
         df, table_id, project_id, if_exists="append", credentials=credentials
     )
     logging.info(f"Uploaded {len(job_data)} jobs to BigQuery")
+
 
 def jobs_list_request(keyword, location, start=0):
     """Request to get job list from LinkedIn."""
@@ -61,6 +204,7 @@ def jobs_list_request(keyword, location, start=0):
     headers = {"User-Agent": user_agent.random}
     return requests.get(url=url, headers=headers, params=params)
 
+
 def parse_job_list(keyword, location, page, task_id) -> list:
     job_data = []
     soup = BeautifulSoup(page, "html.parser")
@@ -73,7 +217,7 @@ def parse_job_list(keyword, location, page, task_id) -> list:
         ).text.strip()
 
         # Skip jobs from companies on the blacklist
-        if company in blacklist:
+        if company.lower() in blacklist:
             continue
 
         # Check if job_id already exists in memory
@@ -91,6 +235,7 @@ def parse_job_list(keyword, location, page, task_id) -> list:
             )
 
     return job_data
+
 
 def process_jobs(keyword, location, task_id):
     start = 0
@@ -126,6 +271,7 @@ def process_jobs(keyword, location, task_id):
     if all_job_data:
         upload_to_bigquery(all_job_data)
         logging.info(f"Uploaded batch of {len(all_job_data)} jobs to BigQuery")
+
 
 if __name__ == "__main__":
     keywords = [

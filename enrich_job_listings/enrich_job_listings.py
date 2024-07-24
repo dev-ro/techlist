@@ -61,7 +61,8 @@ def job_detail_request(job_id, max_retries=8, base_delay=2):
                 soup = BeautifulSoup(response.content, "html.parser")
                 description = soup.find(attrs={"class": "show-more-less-html__markup"})
                 description = description.getText(separator="\n", strip=True) if description else ""
-                return {"job_id": job_id, "description": description, "created_on": time.time(), "url": url}
+                location = soup.find(attrs={"class": "topcard__flavor--bullet"}).text.strip()
+                return {"job_id": job_id, "description": description, "created_on": time.time(), "url": url, "location": location}
 
             if response.status_code in [400, 404]:
                 logging.warning(f"Job ID: {job_id} may be invalid or deleted.")

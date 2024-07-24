@@ -35,10 +35,16 @@ with st.expander("Introduction"):
 
 with st.container():
 
-    @st.cache_data(ttl=3600)
+    @st.cache_data(ttl=3600) # Cache data for 1 hour
     def load_data():
         sql = """
-        SELECT created_on, keyword, company, title, summary, url, hard_skills, tech_stack, soft_skills, industries, salary, benefits FROM `extracted_data.jobs`
+        SELECT FORMAT_TIMESTAMP('%Y-%m-%d %H:%M:%S', 
+            TIMESTAMP_MILLIS(CAST(created_on * 1000 AS INT64)), 
+            "America/New_York") AS time_extracted,
+        keyword, company, title, summary, url, 
+        hard_skills, tech_stack, soft_skills, 
+        industries, benefits, salary
+        FROM `extracted_data.jobs` 
         ORDER BY created_on
         """
 
@@ -46,11 +52,7 @@ with st.container():
             "keys/gbq.json",
         )
 
-        # TODO: Set project_id to your Google Cloud Platform project ID.
         project_id = "techlistme"
-        # TODO: Set table_id to the full destination table ID (including the
-        #       dataset ID).
-        # table_id = "extracted_data.jobs"
 
         # Load data from BigQuery
         data = pandas_gbq.read_gbq(
@@ -158,10 +160,11 @@ with st.container():
 
     # Blacklist of companies
     blacklist_companies = [
+        "synergisticit",
+        "intellectt inc",
         "clearancejobs",
         "steneral consulting",
         "syntricate technologies",
-        "synergisticit",
         "1872 consulting",
         "acs consultancy services, inc",
         "mygwork - lgbtq+ business community",
@@ -170,6 +173,130 @@ with st.container():
         "kyyba inc",
         "motion recruitment",
         "jobs via efinancialcareers",
+        "robert half",
+        "accroid inc",
+        "stellent it",
+        "software technology inc.",
+        "donato technologies, inc.",
+        "tekintegral",
+        "extend information systems inc.",
+        "keylent inc",
+        "kforce inc",
+        "ampcus inc",
+        "get it recruit - information technology",
+        "cybercoders",
+        "diverse lynx",
+        "remoteworker us",
+        "harnham",
+        "augment jobs",
+        "tata consulting company",
+        "tata consultancy services",
+        "clickjobs.io",
+        "jobot",
+        "TekWissen ®",
+        "dice",
+        "techtammina llc",
+        "cynet systems",
+        "iconma",
+        "spectraforce",
+        "agile tech labs",
+        "genesis10",
+        "insight global",
+        "ceres group",
+        "smartiplace",
+        "jobs malaysia - two95 hr hub",
+        "stellar professionals",
+        "lancesoft, inc.",
+        "divihn integration inc",
+        "wise skulls",
+        "cybertec, inc",
+        "lorven technologies inc.",
+        "georgia it, inc.",
+        "avid technology professionals",
+        "hcl global systems inc",
+        "excel hire staffing,llc",
+        "capgemini",
+        "randstad usa",
+        "v-soft consulting group, inc.",
+        "mission technologies, a division of hii",
+        "prohires",
+        "roberts recruiting, llc",
+        "caci international inc",
+        "mantech",
+        "belay technologies",
+        "mindlance",
+        "psrtek",
+        "info way solutions",
+        "the judge group",
+        "ziprecruiter",
+        "hexaquest global",
+        "captivation",
+        "conch technologies, inc",
+        "open systems technologies",
+        "acceler8 talent",
+        "alldus",
+        "clifyx",
+        "marathon ts",
+        "aptask",
+        "v2soft",
+        "hatchpros",
+        "aditi consulting",
+        "ltimindtree",
+        "software people inc.",
+        "lasalle network",
+        "compunnel inc.",
+        "guidehouse",
+        "intersources inc",
+        "ev.careers",
+        "resource informatics group, inc",
+        "htc global services",
+        "pyramid consulting, inc",
+        "artech l.l.c.",
+        "axelon services corporation",
+        "pi square technologies",
+        "enexus global inc.",
+        "algo capital group",
+        "anveta, inc",
+        "akraya, inc.",
+        "softworld, a kelly company",
+        "ascendion",
+        "akkodis",
+        "fasttek global",
+        "system soft technologies",
+        "sky consulting inc.",
+        "intelliswift software",
+        "qinetiq us (formerly avantus federal)",
+        "lhh",
+        "chelsoft solutions co.",
+        "serigor inc",
+        "us tech solutions",
+        "inspyr solutions",
+        "amtex systems inc.",
+        "shiftcode analytics, inc.",
+        "etek it services, inc.",
+        "integrated resources, inc ( iri )",
+        "eteam",
+        "applab systems, inc",
+        "selby jennings",
+        "lmi",
+        "cps, inc.",
+        "mindpal",
+        "usajobs",
+        "caterpillar inc.",
+        "systems technology group, inc. (stg)",
+        "team remotely inc",
+        "megan soft inc",
+        "inficare staffing",
+        "dcs corp",
+        "hexaware technologies",
+        "stanley reid",
+        "epitec",
+        "trispoke managed services pvt. ltd.",
+        "actalent",
+        "jesica.ai",
+        "stealth startup",
+        "paradyme, inc.",
+        "qinetiq us",
     ]
 
     # Convert company names to lowercase for case-insensitive comparison
@@ -182,9 +309,6 @@ with st.container():
 
     # Filter out blacklisted companies
     data = data[~data["company"].isin(blacklist_companies)]
-
-    # Convert created_on field to datetime
-    data["created_on"] = pd.to_datetime(data["created_on"], unit="s")
 
     # Streamlit app layout
     st.title("Dashboard")
@@ -365,23 +489,30 @@ with st.container():
     else:
         st.write("No data found for the given keyword.")
 
-    oldest_date = filtered_data["created_on"].min().strftime("%Y-%m-%d %H:%M:%S")
-    # Get the most recent created_on date
-    most_recent_date = filtered_data["created_on"].max().strftime("%Y-%m-%d %H:%M:%S")
+    oldest_date = filtered_data["time_extracted"].min()
+    most_recent_date = filtered_data["time_extracted"].max()
 
     st.write(f"Oldest data pull: {oldest_date}")
     st.write(f"Recent data pull: {most_recent_date}")
 
-    excluded_companies = ", ".join(blacklist_companies)
+    excluded_companies = ", ".join(sorted(blacklist_companies))
 
     st.write(
-        f"The following companies have been excluded from the analysis:\n{excluded_companies}"
+        f"The following companies have been excluded from the analysis: {excluded_companies}"
     )
     st.write(f"Number of excluded job postings: {excluded_jobs_count}")
 
     """
-
     ## Data Table
-
     """
+    companies_list = [f"All Companies"] + companies_df['Company'].to_list()
+    company = st.selectbox("View jobs by company. Select a company", companies_list)
+
+    # Filter data based on the selected company
+    if "All" in company:
+        filtered_data = filtered_data
+    else:
+        filtered_data = filtered_data[filtered_data["company"].str.lower() == company.lower()]
+
     filtered_data
+        
