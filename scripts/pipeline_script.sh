@@ -11,6 +11,7 @@ job_files=(
   "03-enrich-job-listings.yaml"
   "04-clean-duplicate-descriptions.yaml"
   "05-extract-gemini.yaml"
+  "04-clean-duplicate-descriptions.yaml"
 )
 
 for job_file in "${job_files[@]}"; do

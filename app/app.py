@@ -66,7 +66,7 @@ with st.container():
 
     def convert_strings_to_lists(df, column_name):
         df[column_name] = df[column_name].apply(
-            lambda x: x.split(",") if pd.notna(x) else []
+            lambda x: list(set(x.split(","))) if pd.notna(x) else []
         )
         return df
 
@@ -140,8 +140,7 @@ with st.container():
         "google cloud platform": "GCP",
         "amazon web services": "AWS",
         "aws services": "AWS",
-        "interpersonal skills": "Communication",
-        "interpersonal": "Communication",
+        "interpersonal skills": "interpersonal"
     }
 
     # Replace words in the specified columns
