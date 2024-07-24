@@ -218,6 +218,7 @@ def parse_job_list(keyword, location, page, task_id) -> list:
 
         # Skip jobs from companies on the blacklist
         if company.lower() in blacklist:
+            logging.info(f"Skipping job from blacklisted company: {company}")
             continue
 
         # Check if job_id already exists in memory
