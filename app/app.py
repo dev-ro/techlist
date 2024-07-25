@@ -370,13 +370,6 @@ with st.container():
     oldest_date = filtered_data["time_extracted"].min()
     most_recent_date = filtered_data["time_extracted"].max()
 
-    excluded_companies = ", ".join(sorted(blacklist_companies))
-
-    st.write(
-        f"The following companies have been excluded from the analysis: {excluded_companies}"
-    )
-    # st.write(f"Number of excluded job postings: {excluded_jobs_count}")
-
     """
     ## Data Table
     """
@@ -393,4 +386,9 @@ with st.container():
     filtered_data
     st.write(f"Oldest data pull: {oldest_date}")
     st.write(f"Recent data pull: {most_recent_date}")
-        
+
+with st.expander("Excluded Companies"):
+    # st.write(f"Number of excluded jobs: {excluded_jobs_count}")
+    excluded_companies = ", ".join(sorted(blacklist_companies))
+    st.write("The following companies were excluded from the analysis:")
+    st.write(excluded_companies)

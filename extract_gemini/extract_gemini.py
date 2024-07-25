@@ -30,17 +30,22 @@ destination_table_id = "extracted_data.jobs"
 client = bigquery.Client(credentials=credentials, project=project_id)
 
 
-def load_jobs(batch_size=10, offset=0):
-    """Load jobs from BigQuery"""
+def load_remaining_jobs(batch_size=10):
+    """Load remaining jobs from BigQuery"""
     query = f"""
-    SELECT job_id, description, task_id, keyword, location, company, title, created_on, url
-    FROM `{project_id}.{source_table_id}`
-    WHERE description IS NOT NULL AND description != ""
+    WITH remaining_jobs AS (
+        SELECT r.job_id, r.description, r.task_id, r.keyword, r.location, r.company, r.title, r.created_on, r.url
+        FROM `{project_id}.{source_table_id}` r
+        LEFT JOIN `{project_id}.{destination_table_id}` e ON r.job_id = e.job_id
+        WHERE e.job_id IS NULL
+        AND r.description IS NOT NULL AND r.description != ""
+    )
+    SELECT *
+    FROM remaining_jobs
     ORDER BY created_on
-    LIMIT {batch_size} OFFSET {offset}
+    LIMIT {batch_size}
     """
     return client.query(query).to_dataframe().to_dict(orient="records")
-
 
 def save_jobs(df):
     """Save jobs to BigQuery"""
@@ -51,7 +56,7 @@ def save_jobs(df):
         if_exists="append",
         credentials=credentials,
     )
-    logging.info(f"Saved {len(jobs)} jobs to BigQuery")
+    logging.info(f"Saved {len(df)} jobs to BigQuery")
 
 
 def convert_column(column):
@@ -69,17 +74,12 @@ def convert_all_columns(data):
         data[column] = convert_column(data[column])
     return data
 
-
 def extract_job_description(jobs):
     count_done = 0
     count_errors = 0
     updated_jobs = []
 
     for job in jobs:
-        if "tech_stack" in job:
-            count_done += 1
-            continue
-
         try:
             start_time = time.time()
 
@@ -87,6 +87,7 @@ def extract_job_description(jobs):
                 "models/gemini-1.5-flash-latest",
                 generation_config={"response_mime_type": "application/json"},
                 system_instruction="""
+                                
                                 summarize/extract the data from this job description that returns a json with this exact schema: 
                                 
                                 "summary" -> string,
@@ -123,7 +124,7 @@ def extract_job_description(jobs):
                                     "Odds-Ratios", "T-Tests", "Chi-Squared", "ANOVA", "Git",
                                     "Access", "Word", "PowerPoint", "Excel"
                                 ],           
-                                """,
+                                """
             )
             response = model.generate_content(job["description"])
             new_fields = json.loads(response.text)
@@ -144,7 +145,6 @@ def extract_job_description(jobs):
     updated_jobs = convert_all_columns(pd.DataFrame(updated_jobs))
     save_jobs(updated_jobs)
 
-
 def clean(jobs):
     # Remove newlines, tabs, carriage returns
     for job in jobs:
@@ -156,10 +156,9 @@ def clean(jobs):
 
 if __name__ == "__main__":
     batch_size = 100
-    offset = 0
 
     while True:
-        jobs = load_jobs(batch_size=batch_size, offset=offset)
+        jobs = load_remaining_jobs(batch_size=batch_size)
         if not jobs:
             break
         jobs = clean(jobs)
@@ -169,12 +168,8 @@ if __name__ == "__main__":
             sys.exit("Restart the pipeline to scrape job descriptions first.")
 
         else:
-            logging.info(f"Processing batch starting at offset {offset}...")
+            logging.info(f"Processing batch of {len(jobs)} remaining jobs...")
             extract_job_description(jobs)
-            logging.info(
-                f"Processed batch starting at offset {offset} and saved to BigQuery"
-            )
+            logging.info(f"Processed batch of {len(jobs)} jobs and saved to BigQuery")
 
-        offset += batch_size
-
-    logging.info("All jobs processed and saved to BigQuery")
+    logging.info("All remaining jobs processed and saved to BigQuery")
