@@ -1,17 +1,15 @@
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: pipeline-runner
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: pipeline-runner
+  namespace: default
 rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list"]
 - apiGroups: ["batch"]
   resources: ["jobs"]
-  verbs: ["create", "get", "list", "watch", "delete"]
+  verbs: ["create", "delete", "get", "list", "watch"]
 - apiGroups: [""]
   resources: ["pods", "pods/log"]
   verbs: ["get", "list", "watch"]
@@ -20,9 +18,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: pipeline-runner
+  namespace: default
 subjects:
 - kind: ServiceAccount
   name: pipeline-runner
+  namespace: default
 roleRef:
   kind: Role
   name: pipeline-runner

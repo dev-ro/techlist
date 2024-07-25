@@ -12,22 +12,27 @@ data:
     }
 
     job_files=(
-      "01-collect-job-listings.yaml"
-      "02-clean-duplicate-ids.yaml"
-      "03-enrich-job-listings.yaml"
-      "04-clean-duplicate-descriptions.yaml"
-      "05-extract-gemini.yaml"
-      "04-clean-duplicate-descriptions.yaml"
+      "01-collect-job-listings"
+      "02-clean-duplicate-ids"
+      "03-enrich-job-listings"
+      "04-clean-duplicate-descriptions"
+      "05-extract-gemini"
+      "04-clean-duplicate-descriptions"
     )
 
     for job_file in "${job_files[@]}"; do
-      job=$(echo $job_file | sed 's/^[0-9]*-//; s/\.yaml$//')
+      # Extract the actual job name by removing the number prefix
+      job=$(echo $job_file | sed 's/^[0-9]*-//')
       
       log "Starting job: $job"
       timestamp=$(date +%s)
       job_name="$job-$timestamp"
       
-      kubectl apply -f k8s/jobs/$job_file
+      # Create a temporary file to store the job YAML
+      temp_file=$(mktemp)
+      kubectl get configmap "job-$job_file" -o jsonpath="{.data['${job_file}.yaml']}" > "$temp_file"
+      
+      kubectl apply -f "$temp_file"
       kubectl create job --from=job/$job $job_name
 
       start_time=$(date +%s)
@@ -59,6 +64,7 @@ data:
       done
 
       kubectl delete job $job_name
+      rm "$temp_file"
     done
 
     log "Pipeline completed successfully"

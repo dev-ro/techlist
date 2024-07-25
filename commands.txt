@@ -31,13 +31,28 @@ kubectl apply -f .\k8s\ --recursive --dry-run=client
 kubectl apply -f .\k8s\ --recursive
 
 pipeline order: 
-1 - collect_job_listings
-2 - clean_duplicate_ids
-3 - enrich_job_listings
-4 - clean_duplicate_descriptions
-5 - extract_gemini
+job-01-collect-job-listings
+job-02-clean-duplicate-ids
+job-03-enrich-job-listings
+job-04-clean-duplicate-descriptions
+job-05-extract-gemini
 
 
 how to recover big query table from an hour ago
 command:
 bq cp techlistme:raw_data.jobs@-3600000 techlistme:raw_data.jobs_recovered
+
+
+how to apply configmap
+
+kubectl create configmap job-01-collect-job-listings --from-file=01-collect-job-listings.yaml -o yaml | kubectl apply -f -
+kubectl create configmap job-02-clean-duplicate-ids --from-file=02-clean-duplicate-ids.yaml -o yaml | kubectl apply -f -
+kubectl create configmap job-03-enrich-job-listings --from-file=03-enrich-job-listings.yaml -o yaml | kubectl apply -f -
+kubectl create configmap job-04-clean-duplicate-descriptions --from-file=04-clean-duplicate-descriptions.yaml -o yaml | kubectl apply -f -
+kubectl create configmap job-05-extract-gemini --from-file=05-extract-gemini.yaml -o yaml | kubectl apply -f -
+
+kubectl create configmap job-01-collect-job-listings --from-file=01-collect-job-listings.yaml --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap job-02-clean-duplicate-ids --from-file=02-clean-duplicate-ids.yaml --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap job-03-enrich-job-listings --from-file=03-enrich-job-listings.yaml --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap job-04-clean-duplicate-descriptions --from-file=04-clean-duplicate-descriptions.yaml --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap job-05-extract-gemini --from-file=05-extract-gemini.yaml --dry-run=client -o yaml | kubectl apply -f -
