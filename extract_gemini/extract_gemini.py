@@ -47,7 +47,9 @@ def load_remaining_jobs(batch_size=10):
     ORDER BY created_on
     LIMIT {batch_size}
     """
-    return client.query(query).to_dataframe().to_dict(orient="records")
+    df = client.query(query).to_dataframe()
+    df['job_id'] = df['job_id'].astype(int)  # Ensure job_id is treated as an integer
+    return df.to_dict(orient="records")
 
 
 def save_jobs(df, table_id):
@@ -64,9 +66,10 @@ def save_jobs(df, table_id):
 
 def delete_jobs_from_raw(job_ids):
     """Delete jobs from raw_data.jobs"""
+    job_ids_str = ', '.join(str(id) for id in job_ids)  # Convert to string for SQL
     delete_query = f"""
     DELETE FROM `{project_id}.{source_table_id}`
-    WHERE job_id IN UNNEST({job_ids})
+    WHERE job_id IN ({job_ids_str})
     """
     client.query(delete_query).result()
     logging.info(f"Deleted {len(job_ids)} jobs from {source_table_id}")
