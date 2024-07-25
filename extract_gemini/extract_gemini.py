@@ -26,6 +26,7 @@ credentials = service_account.Credentials.from_service_account_file("keys/gbq.js
 project_id = "techlistme"
 source_table_id = "raw_data.jobs"
 destination_table_id = "extracted_data.jobs"
+bad_jobs_table_id = "raw_data.bad_jobs"
 
 client = bigquery.Client(credentials=credentials, project=project_id)
 
@@ -37,7 +38,8 @@ def load_remaining_jobs(batch_size=10):
         SELECT r.job_id, r.description, r.task_id, r.keyword, r.location, r.company, r.title, r.created_on, r.url
         FROM `{project_id}.{source_table_id}` r
         LEFT JOIN `{project_id}.{destination_table_id}` e ON r.job_id = e.job_id
-        WHERE e.job_id IS NULL
+        LEFT JOIN `{project_id}.{bad_jobs_table_id}` b ON r.job_id = b.job_id
+        WHERE e.job_id IS NULL AND b.job_id IS NULL
         AND r.description IS NOT NULL AND r.description != ""
     )
     SELECT *
@@ -47,16 +49,27 @@ def load_remaining_jobs(batch_size=10):
     """
     return client.query(query).to_dataframe().to_dict(orient="records")
 
-def save_jobs(df):
+
+def save_jobs(df, table_id):
     """Save jobs to BigQuery"""
     pandas_gbq.to_gbq(
         df,
-        destination_table_id,
+        table_id,
         project_id,
         if_exists="append",
         credentials=credentials,
     )
-    logging.info(f"Saved {len(df)} jobs to BigQuery")
+    logging.info(f"Saved {len(df)} jobs to {table_id}")
+
+
+def delete_jobs_from_raw(job_ids):
+    """Delete jobs from raw_data.jobs"""
+    delete_query = f"""
+    DELETE FROM `{project_id}.{source_table_id}`
+    WHERE job_id IN UNNEST({job_ids})
+    """
+    client.query(delete_query).result()
+    logging.info(f"Deleted {len(job_ids)} jobs from {source_table_id}")
 
 
 def convert_column(column):
@@ -74,10 +87,12 @@ def convert_all_columns(data):
         data[column] = convert_column(data[column])
     return data
 
+
 def extract_job_description(jobs):
     count_done = 0
     count_errors = 0
     updated_jobs = []
+    bad_jobs = []
 
     for job in jobs:
         try:
@@ -123,8 +138,8 @@ def extract_job_description(jobs):
                                     "Gradient Boosting Machines", "Support Vector Machines", "Random Forests",
                                     "Odds-Ratios", "T-Tests", "Chi-Squared", "ANOVA", "Git",
                                     "Access", "Word", "PowerPoint", "Excel"
-                                ],           
-                                """
+                                ], 
+                                """,
             )
             response = model.generate_content(job["description"])
             new_fields = json.loads(response.text)
@@ -141,9 +156,18 @@ def extract_job_description(jobs):
         except Exception as e:
             count_errors += 1
             logging.error(f"job {job['job_id']} - total errors: {count_errors} - {e}")
+            job["error"] = str(e)
+            bad_jobs.append(job)
 
-    updated_jobs = convert_all_columns(pd.DataFrame(updated_jobs))
-    save_jobs(updated_jobs)
+    if updated_jobs:
+        updated_jobs_df = convert_all_columns(pd.DataFrame(updated_jobs))
+        save_jobs(updated_jobs_df, destination_table_id)
+
+    if bad_jobs:
+        bad_jobs_df = pd.DataFrame(bad_jobs)
+        save_jobs(bad_jobs_df, bad_jobs_table_id)
+        delete_jobs_from_raw([job["job_id"] for job in bad_jobs])
+
 
 def clean(jobs):
     # Remove newlines, tabs, carriage returns
@@ -170,6 +194,6 @@ if __name__ == "__main__":
         else:
             logging.info(f"Processing batch of {len(jobs)} remaining jobs...")
             extract_job_description(jobs)
-            logging.info(f"Processed batch of {len(jobs)} jobs and saved to BigQuery")
+            logging.info(f"Processed batch of {len(jobs)} jobs")
 
-    logging.info("All remaining jobs processed and saved to BigQuery")
+    logging.info("All remaining jobs processed")
