@@ -33,7 +33,7 @@ def get_blacklist_companies(project_id="techlistme"):
     """
 
     # Execute the query and load results into a DataFrame
-    df = pandas_gbq.read_gbq(query, project_id=project_id)
+    df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=credentials)
 
     # Convert the 'company' column to a list
     blacklist_companies = df['company'].tolist()
@@ -44,14 +44,27 @@ blacklist = get_blacklist_companies()
 blacklist = [company.lower() for company in blacklist]
 
 
-# Load existing job IDs from BigQuery once
 def load_existing_job_ids():
-    query = f"""
-    SELECT job_id FROM `{project_id}.{table_id}`
+    query = """
+    WITH raw_jobs_count AS (
+        SELECT COUNT(*) as count
+        FROM `raw_data.jobs`
+    ),
+    all_jobs AS (
+        SELECT job_id, 'raw' as source FROM `raw_data.jobs`
+        UNION ALL
+        SELECT job_id, 'extracted' as source FROM `extracted_data.jobs`
+        UNION ALL
+        SELECT job_id, 'bad' as source FROM `raw_data.bad_jobs`
+    )
+    SELECT DISTINCT job_id
+    FROM all_jobs
+    WHERE (SELECT count FROM raw_jobs_count) > 0
+       OR source != 'raw'
     """
     df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=credentials)
+    logging.info(f"Loaded {len(df)} existing job IDs from BigQuery")
     return set(df["job_id"])
-
 
 # Store existing job IDs in memory
 existing_job_ids = load_existing_job_ids()
