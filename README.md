@@ -1,63 +1,87 @@
-# [Techlist.me](https://techlist.me) (MVP will be ready in late August)
+# Techlist.me
 
-**Techlist.me** is a comprehensive tool designed to assist job seekers, especially those in data science, in identifying the current technology stacks most in demand by employers. By automating the collection and analysis of job postings from major job boards like Indeed, Glassdoor, and LinkedIn, Techlist.me provides valuable insights into the skills and tools that are crucial for landing a job in tech.
+## Overview
+
+Techlist.me is a data-driven web application designed to analyze the technology landscape for job seekers in the data science field. By leveraging web scraping, natural language processing, and data analytics techniques, Techlist.me provides up-to-date insights into the most in-demand skills, technologies, and industries in the data science job market.
 
 ## Features
 
-- **Automated Web Scraping and Data Processing:**
-  - Collects job postings from multiple job boards using Python and Beautiful Soup.
-  - Processes and cleans the data to ensure accuracy and relevance.
+- **Interactive Dashboard**: Visualizes key job market trends including:
+  - Top tech stacks
+  - Most in-demand hard skills
+  - Frequently mentioned soft skills
+  - Companies with the most job postings
+  - Leading industries for data science roles
+  - Common benefits offered
 
-- **NLP Techniques:**
-  - Utilizes Named Entity Recognition and Hugging Face transformers to extract key information about tech stacks from job descriptions.
+- **Automated Data Collection**: Utilizes a Kubernetes cluster to perform weekly web scraping of LinkedIn job postings, ensuring the data remains current.
 
-- **User-Friendly Dashboard:**
-  - Built with React, CSS, and Streamlit, the dashboard allows users to search for specific jobs, companies, or industries and view the relevant tech stack information.
-  - Features intuitive search and filter functionalities to enhance user experience.
+- **Advanced Natural Language Processing**: Employs Google Gemini Flash for efficient and accurate keyword extraction from job postings.
 
-- **Data Analysis and Visualization:**
-  - Provides insights into the most in-demand tools and technologies for data science and other tech roles.
-  - Displays results in an easily understandable format to help job seekers focus their learning and project development efforts.
+- **Cloud-Based Infrastructure**: Hosted on Google Cloud Platform, utilizing App Engine for hosting and BigQuery for data storage.
 
-## Technical Stack
+## Technology Stack
 
-- **Backend:** Flask (Python) or Go (TBD)
-- **Frontend:** React, CSS, Streamlit
-- **Cloud Hosting:** Azure
-- **Web Scraping:** Beautiful Soup (Python)
-- **NLP Libraries:** Hugging Face Transformers
-- **Data Processing:** Python for automation and data handling
+- **Application Framework**: Streamlit
+- **Data Processing**: Python (pandas, pandas_gbq)
+- **Visualization**: Altair
+- **Database**: Google BigQuery
+- **Cloud Platform**: Google Cloud Platform (App Engine, Kubernetes Engine, BigQuery)
+- **NLP Model**: Google Gemini Flash
 
-## Project Goals
+## Usage
 
-- **Enhance Employability:**
-  - Provide clear guidance on the skills and tools needed to secure data science roles.
-  - Align students' learning with industry demands by highlighting the most sought-after technologies.
+To use Techlist.me, simply visit [techlist.me](https://techlist.me) in your web browser. The interactive dashboard allows you to:
 
-- **Continuous Learning:**
-  - Encourage users to keep their skills up-to-date with the latest industry trends.
+- Filter data by job type and company
+- Visualize top keywords for each category (tech stack, hard skills, soft skills, company, industries, benefits)
+- Explore trends and insights in the data science job market
 
-## Challenges and Solutions
+## Setup and Installation
 
-- **Data Quality:**
-  - Ensuring the accuracy and relevance of scraped data.
-  - **Solution:** Regularly update the scraping algorithms and validate the data.
+For those interested in running the application locally or deploying it, here's a high-level overview of the setup process:
 
-- **Scalability:**
-  - Handling large amounts of data from multiple sources.
-  - **Solution:** Use scalable cloud services like Azure for processing and storage.
+1. Clone the repository
+2. Install dependencies:
 
-- **User Engagement:**
-  - Ensuring the tool is user-friendly and meets users' needs.
-  - **Solution:** Gather user feedback and iterate on the design.
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Current Status
+3. Enable GCP APIs for BigQuery
+4. Set up GCP credentials for BigQuery and save to `keys/gbq.json`
+5. Install Google Cloud CLI
 
-- **Planning Stage:**
-  - Defined project scope, technical stack, and initial design.
+### Running Locally
 
-- **Initial Research:**
-  - Conducted interviews to identify gaps between academic programs and industry needs.
+To run the app locally:
 
-- **Prototype:**
-  - Created a spreadsheet shared on Slack, indicating high interest but low response rate.
+1. Navigate to the app folder
+2. Run the command:
+
+   ```bash
+   streamlit run app.py
+   ```
+
+### Deploying to Google App Engine
+
+To deploy the app to Google App Engine:
+
+1. Navigate to the app folder
+2. Run the command:
+
+   ```bash
+   gcloud app deploy
+   ```
+
+This will dockerize the application and deploy it to Google App Engine.
+
+Optional: To connect your own domain to the App Engine hosted domain, follow Google Cloud's documentation on custom domain setup.
+
+## Note on Data and Credentials
+
+The application is designed to work with BigQuery and not local data files. Access to the full functionality requires appropriate GCP credentials and BigQuery setup, which are not provided in this repository for security reasons.
+
+## Data Refresh
+
+Job posting data is automatically updated on a weekly basis using a Kubernetes-based web scraping system.
