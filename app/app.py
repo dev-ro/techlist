@@ -35,7 +35,7 @@ with st.expander("Introduction"):
 
 with st.container():
 
-    @st.cache_data(ttl=3600) # Cache data for 1 hour
+    @st.cache_data(ttl=3600)  # Cache data for 1 hour
     def load_data():
         sql = """
         SELECT FORMAT_TIMESTAMP('%Y-%m-%d %H:%M:%S', 
@@ -142,7 +142,7 @@ with st.container():
         "google cloud platform": "GCP",
         "amazon web services": "AWS",
         "aws services": "AWS",
-        "interpersonal skills": "interpersonal"
+        "interpersonal skills": "interpersonal",
     }
 
     # Replace words in the specified columns
@@ -158,7 +158,6 @@ with st.container():
         if column in data.columns:
             replace_words_in_list(data, column, replacements)
 
-    
     def get_blacklist_companies(project_id="techlistme"):
         # SQL query to fetch company names from the blacklist table
         query = """
@@ -170,10 +169,10 @@ with st.container():
         df = pandas_gbq.read_gbq(query, project_id=project_id)
 
         # Convert the 'company' column to a list
-        blacklist_companies = df['company'].tolist()
+        blacklist_companies = df["company"].tolist()
 
         return blacklist_companies
-    
+
     # Blacklist of companies
     blacklist_companies = get_blacklist_companies()
 
@@ -204,7 +203,6 @@ with st.container():
         filtered_data = data[data["keyword"] == keyword]
 
     # Function to count frequency of words in lists, case-insensitively
-    @st.cache_data
     def count_frequency(column_data):
         all_items = []
         for item in column_data:
@@ -218,7 +216,6 @@ with st.container():
         return Counter(all_items)
 
     # Function to calculate median min and max salary
-    @st.cache_data
     def calculate_mean_salary(data):
         min_salaries = [
             entry["min"]
@@ -254,35 +251,24 @@ with st.container():
 
     st.write(f"Count of Job Postings for {keyword}: {filtered_data.shape[0]}")
     n = st.slider("Number of Top Elements to Display", 5, 50, 25)
+
     # Check if filtered_data is not empty before processing
     if not filtered_data.empty:
-        # Count frequency of words in each category
-        hard_skills_freq = count_frequency(filtered_data["hard_skills"])
-        tech_stack_freq = count_frequency(filtered_data["tech_stack"])
-        soft_skills_freq = count_frequency(filtered_data["soft_skills"])
-        industries_freq = count_frequency(filtered_data["industries"])
-        companies_freq = count_frequency(filtered_data["company"])
-        benefits_freq = count_frequency(filtered_data["benefits"])
+        columns = [
+            "hard_skills",
+            "tech_stack",
+            "soft_skills",
+            "industries",
+            "company",
+            "benefits",
+        ]
 
-        # Convert frequency counts to DataFrame for plotting and sort them
-        hard_skills_df = pd.DataFrame(
-            hard_skills_freq.most_common(n), columns=["Skill", "Frequency"]
-        )
-        tech_stack_df = pd.DataFrame(
-            tech_stack_freq.most_common(n), columns=["Tech", "Frequency"]
-        )
-        soft_skills_df = pd.DataFrame(
-            soft_skills_freq.most_common(n), columns=["Skill", "Frequency"]
-        )
-        industries_df = pd.DataFrame(
-            industries_freq.most_common(n), columns=["Industry", "Frequency"]
-        )
-        companies_df = pd.DataFrame(
-            companies_freq.most_common(n), columns=["Company", "Frequency"]
-        )
-        benefits_df = pd.DataFrame(
-            benefits_freq.most_common(n), columns=["Benefit", "Frequency"]
-        )
+        def frequency_counter(data, column):
+            freq = count_frequency(data[column])
+            df = pd.DataFrame(freq.most_common(n), columns=[column, "Frequency"])
+            return df
+
+        dfs = [frequency_counter(filtered_data, column) for column in columns]
 
         # Plotting bar charts with Altair
         def plot_bar_chart(df, x, y, title):
@@ -301,68 +287,25 @@ with st.container():
             )  # Make the chart interactive
             return chart
 
-        st.header(f"Top Tech Stack for {keyword}")
-        st.altair_chart(
-            plot_bar_chart(
-                tech_stack_df,
-                "Tech",
-                "Frequency",
-                f"Top {n} In-Demand Tech Stack for {keyword}",
-            ),
-            use_container_width=True,
-        )
+        def plot_altair_chart(df, column_name):
+            title = column_name.replace("_", " ").title()
 
-        st.header(f"Top Hard Skills for {keyword}")
-        st.altair_chart(
-            plot_bar_chart(
-                hard_skills_df,
-                "Skill",
-                "Frequency",
-                f"Top {n} In-Demand Hard Skills for {keyword}",
-            ),
-            use_container_width=True,
-        )
-
-        st.header(f"Top Soft Skills for {keyword}")
-        st.altair_chart(
-            plot_bar_chart(
-                soft_skills_df,
-                "Skill",
-                "Frequency",
-                f"Top {n} In-Demand Soft Skills for {keyword}",
-            ),
-            use_container_width=True,
-        )
-
-        st.header(f"Top Industries for {keyword}")
-        st.altair_chart(
-            plot_bar_chart(
-                industries_df,
-                "Industry",
-                "Frequency",
-                f"Top {n} In-Demand Industries for {keyword}",
-            ),
-            use_container_width=True,
-        )
-
-        st.header(f"Companies Hiring for {keyword}")
-        st.altair_chart(
-            plot_bar_chart(
-                companies_df,
-                "Company",
-                "Frequency",
-                f"Companies Hiring Most for {keyword}",
-            ),
-            use_container_width=True,
-        )
-
-        st.header(f"Top Benefits for {keyword}")
-        st.altair_chart(
-            plot_bar_chart(
-                benefits_df, "Benefit", "Frequency", f"Top {n} Benefits for {keyword}"
-            ),
-            use_container_width=True,
-        )
+            if title == "Company":
+                st.header(f"Companies Hiring Most for {keyword}")
+            else:
+                st.header(f"Top {title} for {keyword}")
+            st.altair_chart(
+                plot_bar_chart(
+                    df,
+                    f"{column_name}",
+                    "Frequency",
+                    f"Top {n} In-Demand {title} for {keyword}",
+                ),
+                use_container_width=True,
+            )
+            
+        for i, df in enumerate(dfs):
+            plot_altair_chart(df, columns[i])
 
     else:
         st.write("No data found for the given keyword.")
@@ -371,24 +314,67 @@ with st.container():
     most_recent_date = filtered_data["time_extracted"].max()
 
     """
-    ## Data Table
+    ### Data Table with Company Filter
     """
-    companies_list = [f"All Companies"] + companies_df['Company'].to_list()
-    company = st.selectbox("View jobs by company. Select a company", companies_list)
+    companies_list = [f"All Companies"] + dfs[-2]["company"].to_list() # Get the company list from the second to last dataframe in dfs
+    company = st.selectbox(
+        f"View all companies, or select one from the top {n} hiring most.",
+        companies_list,
+    )
 
     # Filter data based on the selected company
     if "All" in company:
         filtered_data = filtered_data
     else:
-        filtered_data = filtered_data[filtered_data["company"].str.lower() == company.lower()]
+        filtered_data = filtered_data[
+            filtered_data["company"].str.lower() == company.lower()
+        ]
 
-    st.write("Tip: Add more companies by adjusting the slider above the bar charts!")
+    st.write(
+        "Tip: Adjust the slider above the bar charts to add more company options to the dropdown menu above!"
+    )
     filtered_data
+
+    def get_freq_table(df, column_name, n):
+        freq = count_frequency(df[column_name])
+        df = pd.DataFrame(freq.most_common(n), columns=[column_name, "Frequency"])
+        return df
+
+    tech_stack_df = get_freq_table(filtered_data, "tech_stack", n)
+    hard_skills_df = get_freq_table(filtered_data, "hard_skills", n)
+    soft_skills_df = get_freq_table(filtered_data, "soft_skills", n)
+    industries_df = get_freq_table(filtered_data, "industries", n)
+    benefits_df = get_freq_table(filtered_data, "benefits", n)
+
+    def plot_altair_chart(df, column_name):
+        title = column_name.replace("_", " ").title()
+        st.header(f"Top {title} for {keyword} at {company.title()}")
+        st.altair_chart(
+            plot_bar_chart(
+                df,
+                f"{column_name}",
+                "Frequency",
+                f"Top {n} In-Demand {title} for {keyword} at {company.title()}",
+            ),
+            use_container_width=True,
+        )
+
+    plot_altair_chart(tech_stack_df, "tech_stack")
+    plot_altair_chart(hard_skills_df, "hard_skills")
+    plot_altair_chart(soft_skills_df, "soft_skills")
+    plot_altair_chart(industries_df, "industries")
+    plot_altair_chart(benefits_df, "benefits")
+
     st.write(f"Oldest data pull: {oldest_date}")
     st.write(f"Recent data pull: {most_recent_date}")
 
 with st.expander("Excluded Companies"):
-    # st.write(f"Number of excluded jobs: {excluded_jobs_count}")
     excluded_companies = ", ".join(sorted(blacklist_companies))
-    st.write("The following companies were excluded from the analysis:")
+    st.write(
+        """
+        The following recruiting/consulting companies were excluded because 
+        they hire on behalf of other companies and have a 
+        disproportionately high number of job postings:
+        """
+    )
     st.write(excluded_companies)
