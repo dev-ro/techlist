@@ -303,7 +303,7 @@ with st.container():
                 ),
                 use_container_width=True,
             )
-            
+
         for i, df in enumerate(dfs):
             plot_altair_chart(df, columns[i])
 
@@ -335,38 +335,39 @@ with st.container():
     )
     filtered_data
 
-    def get_freq_table(df, column_name, n):
-        freq = count_frequency(df[column_name])
-        df = pd.DataFrame(freq.most_common(n), columns=[column_name, "Frequency"])
-        return df
+    with st.expander("Company Charts"):
+        def get_freq_table(df, column_name, n):
+            freq = count_frequency(df[column_name])
+            df = pd.DataFrame(freq.most_common(n), columns=[column_name, "Frequency"])
+            return df
 
-    tech_stack_df = get_freq_table(filtered_data, "tech_stack", n)
-    hard_skills_df = get_freq_table(filtered_data, "hard_skills", n)
-    soft_skills_df = get_freq_table(filtered_data, "soft_skills", n)
-    industries_df = get_freq_table(filtered_data, "industries", n)
-    benefits_df = get_freq_table(filtered_data, "benefits", n)
+        tech_stack_df = get_freq_table(filtered_data, "tech_stack", n)
+        hard_skills_df = get_freq_table(filtered_data, "hard_skills", n)
+        soft_skills_df = get_freq_table(filtered_data, "soft_skills", n)
+        industries_df = get_freq_table(filtered_data, "industries", n)
+        benefits_df = get_freq_table(filtered_data, "benefits", n)
 
-    def plot_altair_chart(df, column_name):
-        title = column_name.replace("_", " ").title()
-        st.header(f"Top {title} for {keyword} at {company.title()}")
-        st.altair_chart(
-            plot_bar_chart(
-                df,
-                f"{column_name}",
-                "Frequency",
-                f"Top {n} In-Demand {title} for {keyword} at {company.title()}",
-            ),
-            use_container_width=True,
-        )
+        def plot_altair_chart(df, column_name):
+            title = column_name.replace("_", " ").title()
+            st.header(f"Top {title} for {keyword} at {company.title()}")
+            st.altair_chart(
+                plot_bar_chart(
+                    df,
+                    f"{column_name}",
+                    "Frequency",
+                    f"Top {n} In-Demand {title} for {keyword} at {company.title()}",
+                ),
+                use_container_width=True,
+            )
 
-    plot_altair_chart(tech_stack_df, "tech_stack")
-    plot_altair_chart(hard_skills_df, "hard_skills")
-    plot_altair_chart(soft_skills_df, "soft_skills")
-    plot_altair_chart(industries_df, "industries")
-    plot_altair_chart(benefits_df, "benefits")
+        plot_altair_chart(tech_stack_df, "tech_stack")
+        plot_altair_chart(hard_skills_df, "hard_skills")
+        plot_altair_chart(soft_skills_df, "soft_skills")
+        plot_altair_chart(industries_df, "industries")
+        plot_altair_chart(benefits_df, "benefits")
 
-    st.write(f"Oldest data pull: {oldest_date}")
-    st.write(f"Recent data pull: {most_recent_date}")
+        st.write(f"Oldest data pull: {oldest_date}")
+        st.write(f"Recent data pull: {most_recent_date}")
 
 with st.expander("Excluded Companies"):
     excluded_companies = ", ".join(sorted(blacklist_companies))
