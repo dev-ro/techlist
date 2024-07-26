@@ -8,12 +8,11 @@ In the rapidly evolving tech industry, staying updated with the latest trends an
 
 ## Data Sources
 
-The data presented on techlist.me is collected from various job boards and company websites. The focus is on extracting key information such as:
+The data presented on techlist.me is collected from various LinkedIn job postings. The focus is on extracting key information such as:
 
-- **Job Titles**: Positions related to data science, machine learning, data engineering, and more.
+- **Tech Stack**: Programming languages, frameworks, tools, and technologies in demand.
 - **Hard Skills**: Technical skills that are explicitly required in job postings.
 - **Soft Skills**: Interpersonal and non-technical skills valued by employers.
-- **Tech Stack**: Programming languages, frameworks, tools, and technologies in demand.
 - **Industries**: Sectors that are actively hiring for data-related roles.
 - **Companies**: Organizations with a significant number of job postings in the data domain.
 - **Benefits**: Common benefits offered to attract top talent.

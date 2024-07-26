@@ -147,8 +147,8 @@ with st.container():
 
     # Replace words in the specified columns
     columns_to_replace = [
-        "hard_skills",
         "tech_stack",
+        "hard_skills",
         "soft_skills",
         "industries",
         "company",
@@ -253,17 +253,15 @@ with st.container():
     min_salary, max_salary = calculate_mean_salary(salary_data)
 
     # Display the results in Streamlit
-    st.write(f"Average Minimum Salary for {keyword}: ${min_salary:,.2f}")
-    st.write(f"Average Maximum Salary for {keyword}: ${max_salary:,.2f}")
+    st.write(f"""Avg. Salary Range for {keyword}: \${min_salary:,.2f} - ${max_salary:,.2f}""")
 
-    st.write(f"Count of Job Postings for {keyword}: {filtered_data.shape[0]}")
-    n = st.slider("Number of Top Elements to Display", 5, 50, 25, 5)
+    n = st.slider("Number of Top Elements to Display in the Charts", 5, 50, 25, 5)
 
     # Check if filtered_data is not empty before processing
     if not filtered_data.empty:
         columns = [
-            "hard_skills",
             "tech_stack",
+            "hard_skills",
             "soft_skills",
             "industries",
             "company",
@@ -323,11 +321,11 @@ with st.container():
     """
     ### Data Table with Company Filter
     """
-    x = st.slider(f"How many companies hiring most for {keyword} do you want to show in the menu below?", 5, 200, 25, 5)
+    x = st.slider(f"How many companies hiring for {keyword} do you want to show in the menu below?", 5, 200, 25, 5)
     top_x_companies = filtered_data["company"].value_counts().head(x).index.tolist()
     companies_list = [f"All Companies"] + top_x_companies
     company = st.selectbox(
-        f"Select a company from the top {x} hiring most for {keyword} (sorted by most to least job postings).",
+        f"Select a company from the top {x} hiring for {keyword} (sorted by most to least job postings).",
         companies_list,
     )
 
@@ -391,3 +389,5 @@ with st.expander("Excluded Companies"):
 
 st.write(f"Oldest data pull: {oldest_date}")
 st.write(f"Recent data pull: {most_recent_date}")
+count = filtered_data.shape[0]
+st.write(f"{count} jobs found for {keyword} at {company.title()}.")
