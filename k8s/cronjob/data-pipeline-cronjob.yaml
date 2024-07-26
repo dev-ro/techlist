@@ -4,7 +4,7 @@ metadata:
   name: data-pipeline-cron
   namespace: default
 spec:
-  schedule: "0 0 * * 0"  # Every Sunday at midnight
+  schedule: "@weekly"  # Every Sunday at midnight UTC
   jobTemplate:
     spec:
       template:
@@ -30,25 +30,11 @@ spec:
               
               for job in "${jobs[@]}"; do
                 echo "Starting job: $job"
-                
-                echo "Retrieving ConfigMap for $job"
-                kubectl get configmap "job-$job" -n default -o yaml
-                
+                   
                 echo "Extracting job YAML"
                 job_yaml=$(kubectl get configmap "job-$job" -n default -o jsonpath="{.data['$job\.yaml']}")
-                
-                echo "Raw extracted YAML:"
-                echo "$job_yaml"
-                
-                echo "Decoding YAML"
-                decoded_yaml=$(echo "$job_yaml" | sed 's/\\n/\n/g' | sed 's/\\"/"/g' | sed 's/^"//; s/"$//' | sed 's/\r$//')
-                
-                echo "Decoded YAML:"
-                echo "$decoded_yaml"
-                
-                echo "YAML length: ${#decoded_yaml}"
-                
-                if [ -z "$decoded_yaml" ]; then
+
+                if [ -z "$job_yaml" ]; then
                   echo "Error: job YAML is empty for $job"
                   exit 1
                 fi
@@ -56,7 +42,7 @@ spec:
                 echo "Modifying job name"
                 timestamp=$(date +%s)
                 job_name="${job}-${timestamp}"
-                modified_yaml=$(echo "$decoded_yaml" | awk -v new_name="$job_name" '
+                modified_yaml=$(echo "$job_yaml" | awk -v new_name="$job_name" '
                   /kind: Job/,/spec:/ {
                     if ($1 == "name:") {
                       print "  name: " new_name
@@ -65,15 +51,12 @@ spec:
                   }
                   {print}
                 ')
-                
-                echo "Modified YAML:"
-                echo "$modified_yaml"
-                
+
                 echo "Applying job YAML"
                 echo "$modified_yaml" | kubectl apply -f - -n default
                 
                 echo "Waiting for job $job_name to complete..."
-                if ! kubectl wait --for=condition=complete "job/$job_name" -n default --timeout=1h; then
+                if ! kubectl wait --for=condition=complete "job/$job_name" -n default --timeout=48h; then
                   echo "Job $job_name failed or timed out"
                   kubectl logs "job/$job_name" -n default
                   kubectl delete job "$job_name" -n default

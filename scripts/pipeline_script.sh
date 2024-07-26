@@ -1,58 +1,53 @@
-#!/bin/bash
-set -eo pipefail
-
-log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-}
-
-job_files=(
-  "01-collect-job-listings.yaml"
-  "02-clean-duplicate-ids.yaml"
-  "03-enrich-job-listings.yaml"
-  "04-clean-duplicate-descriptions.yaml"
-  "05-extract-gemini.yaml"
-  "04-clean-duplicate-descriptions.yaml"
-)
-
-for job_file in "${job_files[@]}"; do
-  job=$(echo $job_file | sed 's/^[0-9]*-//; s/\.yaml$//')
+- -c
+- |
+  set -e
   
-  log "Starting job: $job"
-  timestamp=$(date +%s)
-  job_name="$job-$timestamp"
+  jobs=(
+    "01-collect-job-listings"
+    "02-clean-duplicate-ids"
+    "03-enrich-job-listings"
+    "04-clean-duplicate-descriptions"
+    "05-extract-gemini"
+    "04-clean-duplicate-descriptions"
+  )
   
-  kubectl apply -f k8s/jobs/$job_file
-  kubectl create job --from=job/$job $job_name
+  for job in "${jobs[@]}"; do
+    echo "Starting job: $job"
+        
+    echo "Extracting job YAML"
+    job_yaml=$(kubectl get configmap "job-$job" -n default -o jsonpath="{.data['$job\.yaml']}")
 
-  start_time=$(date +%s)
-  while true; do
-    status=$(kubectl get job $job_name -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}')
-    if [ "$status" == "True" ]; then
-      end_time=$(date +%s)
-      duration=$((end_time - start_time))
-      log "Job $job completed successfully in $duration seconds"
-      break
-    elif [ "$status" == "False" ]; then
-      log "Job $job failed"
-      kubectl logs job/$job_name
+    if [ -z "$job_yaml" ]; then
+      echo "Error: job YAML is empty for $job"
       exit 1
-    else
-      current_time=$(date +%s)
-      elapsed=$((current_time - start_time))
-      log "Job $job still running after $elapsed seconds..."
-      
-      pod_status=$(kubectl get pods --selector=job-name=$job_name -o jsonpath='{.items[*].status.phase}')
-      log "Pod status: $pod_status"
-      
-      if [ "$pod_status" == "Running" ]; then
-        log "Recent logs:"
-        kubectl logs job/$job_name --tail=5
-      fi
     fi
-    sleep 300
+    
+    echo "Modifying job name"
+    timestamp=$(date +%s)
+    job_name="${job}-${timestamp}"
+    modified_yaml=$(echo "$job_yaml" | awk -v new_name="$job_name" '
+      /kind: Job/,/spec:/ {
+        if ($1 == "name:") {
+          print "  name: " new_name
+          next
+        }
+      }
+      {print}
+    ')
+
+    echo "Applying job YAML"
+    echo "$modified_yaml" | kubectl apply -f - -n default
+    
+    echo "Waiting for job $job_name to complete..."
+    if ! kubectl wait --for=condition=complete "job/$job_name" -n default --timeout=48h; then
+      echo "Job $job_name failed or timed out"
+      kubectl logs "job/$job_name" -n default
+      kubectl delete job "$job_name" -n default
+      exit 1
+    fi
+    
+    echo "Job $job_name completed successfully"
+    kubectl delete job "$job_name" -n default
   done
-
-  kubectl delete job $job_name
-done
-
-log "Pipeline completed successfully"
+  
+  echo "All jobs completed successfully"
