@@ -80,7 +80,7 @@ Optional: To connect your own domain to the App Engine hosted domain, follow Goo
 
 ## Note on Data and Credentials
 
-The application is designed to work with BigQuery and not local data files. Access to the full functionality requires appropriate GCP credentials and BigQuery setup, which are not provided in this repository for security reasons.
+The application is designed to work with BigQuery and not local data files. Access to the full functionality requires appropriate GCP credentials and BigQuery setup, which are not provided in this repository for security reasons. A 100-row sample of the dataset is provided at data/sample.csv
 
 ## Data Refresh
 
