@@ -86,8 +86,8 @@ The data extraction pipeline is deployed on Google Kubernetes Engine and execute
 2. clean_duplicate_ids - Searches often have job_ids you already found; this step is for efficiency
 3. enrich_job_listings - This step is going to each job url created from the job_ids it found, and saving its description to the database.
 4. clean_duplicate_descriptions - Some jobs, although having unique job_ids will have identical descriptions, so remove those.
-5. extract_gemini - This step is extracting the keywords from the job descriptions with Google Gemini API.
-6. clean_duplicate_descrptions - This container also has a method for cleaning up the raw_data.jobs table if the job keywords have been extracted, so run it again as a final step.
+5. extract_gemini - This step is extracting the keywords from the job descriptions with Google Gemini API and putting it into the extracted_data.jobs table, used for the website.
+6. clean_duplicate_descrptions - This container also has a method for cleaning up the raw_data.jobs table if the job keywords have been extracted, so it runs again as a final step.
 
 ## Note on Data and Credentials
 
