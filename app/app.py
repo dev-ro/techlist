@@ -180,6 +180,7 @@ with st.container():
     data["company"] = data["company"].str.lower()
 
     blacklist_companies = [company.lower() for company in blacklist_companies]
+    blacklist_companies = set(blacklist_companies)
 
     # Calculate the number of excluded jobs before filtering
     excluded_jobs_count = data[data["company"].isin(blacklist_companies)].shape[0]
@@ -366,11 +367,10 @@ with st.container():
         plot_altair_chart(industries_df, "industries")
         plot_altair_chart(benefits_df, "benefits")
 
-        st.write(f"Oldest data pull: {oldest_date}")
-        st.write(f"Recent data pull: {most_recent_date}")
+
 
 with st.expander("Excluded Companies"):
-    excluded_companies = ", ".join(sorted(blacklist_companies))
+    
     st.write(
         """
         The following recruiting/consulting companies were excluded because 
@@ -378,4 +378,8 @@ with st.expander("Excluded Companies"):
         disproportionately high number of job postings:
         """
     )
+    excluded_companies = ", ".join(sorted(blacklist_companies))
     st.write(excluded_companies)
+
+st.write(f"Oldest data pull: {oldest_date}")
+st.write(f"Recent data pull: {most_recent_date}")
