@@ -6,7 +6,7 @@ instance_class: F2
 resources:
   cpu: 1
   memory_gb: 2
-  disk_size_gb: 5
+  disk_size_gb: 10
 
 automatic_scaling:
   min_num_instances: 1
