@@ -158,15 +158,21 @@ with st.container():
         if column in data.columns:
             replace_words_in_list(data, column, replacements)
 
-    def get_blacklist_companies(project_id="techlistme"):
+    def get_blacklist_companies():
         # SQL query to fetch company names from the blacklist table
         query = """
         SELECT company
         FROM `extracted_data.blacklist`
         """
 
+        credentials = service_account.Credentials.from_service_account_file(
+            "keys/gbq.json",
+        )
+
+        project_id = "techlistme"
+
         # Execute the query and load results into a DataFrame
-        df = pandas_gbq.read_gbq(query, project_id=project_id)
+        df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=credentials)
 
         # Convert the 'company' column to a list
         blacklist_companies = df["company"].tolist()
@@ -251,7 +257,7 @@ with st.container():
     st.write(f"Average Maximum Salary for {keyword}: ${max_salary:,.2f}")
 
     st.write(f"Count of Job Postings for {keyword}: {filtered_data.shape[0]}")
-    n = st.slider("Number of Top Elements to Display", 5, 50, 25)
+    n = st.slider("Number of Top Elements to Display", 5, 50, 25, 5)
 
     # Check if filtered_data is not empty before processing
     if not filtered_data.empty:
@@ -317,14 +323,16 @@ with st.container():
     """
     ### Data Table with Company Filter
     """
-    companies_list = [f"All Companies"] + dfs[-2]["company"].to_list() # Get the company list from the second to last dataframe in dfs
+    x = st.slider(f"How many companies hiring most for {keyword} do you want to show in the menu below?", 5, 200, 25, 5)
+    top_x_companies = filtered_data["company"].value_counts().head(x).index.tolist()
+    companies_list = [f"All Companies"] + top_x_companies
     company = st.selectbox(
-        f"View all companies, or select one from the top {n} hiring most.",
+        f"Select a company from the top {x} hiring most for {keyword} (sorted by most to least job postings).",
         companies_list,
     )
 
     # Filter data based on the selected company
-    if "All" in company:
+    if "All Companies" in company:
         filtered_data = filtered_data
     else:
         filtered_data = filtered_data[
@@ -332,11 +340,12 @@ with st.container():
         ]
 
     st.write(
-        "Tip: Adjust the slider above the bar charts to add more company options to the dropdown menu above!"
+        "Tip: Adjust the slider to add more company options to the dropdown menu above!"
     )
     filtered_data
 
     with st.expander("Company Charts"):
+
         def get_freq_table(df, column_name, n):
             freq = count_frequency(df[column_name])
             df = pd.DataFrame(freq.most_common(n), columns=[column_name, "Frequency"])
@@ -368,9 +377,8 @@ with st.container():
         plot_altair_chart(benefits_df, "benefits")
 
 
-
 with st.expander("Excluded Companies"):
-    
+
     st.write(
         """
         The following recruiting/consulting companies were excluded because 
