@@ -84,6 +84,7 @@ def enrich_jobs(batch_size=100, max_workers=1):
     query = f"""
     SELECT job_id FROM `{project_id}.{dataset_id}.{table_id}`
     WHERE description IS NULL
+    ORDER BY created_on
     """
     job_ids = client.query(query).to_dataframe()["job_id"].tolist()
 
