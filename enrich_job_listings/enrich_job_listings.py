@@ -40,9 +40,9 @@ def update_job_descriptions(job_data):
     ) S
     ON T.job_id = S.job_id
     WHEN MATCHED THEN
-      UPDATE SET T.description = S.description, T.created_on = S.created_on, T.url = S.url
+      UPDATE SET T.description = S.description, T.created_on = S.created_on, T.url = S.url, T.location = S.location
     WHEN NOT MATCHED THEN
-      INSERT (job_id, description, created_on, url) VALUES (S.job_id, S.description, S.created_on, S.url)
+      INSERT (job_id, description, created_on, url, location) VALUES (S.job_id, S.description, S.created_on, S.url, S.location)
     """
 
     client.query(merge_query).result()
