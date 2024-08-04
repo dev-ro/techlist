@@ -36,7 +36,7 @@ def update_job_descriptions(job_data):
     merge_query = f"""
     MERGE `{table_id_full}` T
     USING (
-      SELECT job_id, description, created_on, url FROM `{temp_table_id}`
+      SELECT job_id, description, created_on, url, location FROM `{temp_table_id}`
     ) S
     ON T.job_id = S.job_id
     WHEN MATCHED THEN
