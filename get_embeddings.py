@@ -1,91 +1,73 @@
-import pandas as pd
 import numpy as np
-import openai
-import json
-import os
+import pandas as pd
 from tqdm import tqdm
-from sklearn.cluster import KMeans
-import plotly.express as px
-import plotly.graph_objects as go
-import plotly.io as pio
-from collections import Counter
-from dotenv import load_dotenv
 from openai import OpenAI
-import tiktoken
+import ast
+from dotenv import load_dotenv
+import os
 
+# Load environment variables
 load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Directory containing the JSON files
-directory = 'data/extracted/gemini'
 
-# List to hold all job entries
-all_jobs = []
-
-# Loop through the files and read each JSON file
-for filename in os.listdir(directory):
-    if filename.endswith('.json'):
-        with open(os.path.join(directory, filename), 'r', encoding='utf-8') as file:
-            jobs = json.load(file)
-            all_jobs.extend(jobs)
-
-# Convert the list of dictionaries to a DataFrame
-df = pd.DataFrame(all_jobs)
-jobs_df = df.copy()
-
-# Initialize the OpenAI client with the API key directly
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-
-# Initialize the tokenizer for the specified model
-encoding = tiktoken.encoding_for_model("text-embedding-3-small")
-
-# Function to ensure the input does not exceed the max token limit
-def truncate_texts(texts, max_tokens=8191):
-    tokens = []
-    for text in texts:
-        if not isinstance(text, str):
-            continue  # Skip non-string inputs
-        tokens += encoding.encode(text) + [encoding.encode(" ")[0]]  # Add a space token between texts
-        if len(tokens) > max_tokens:
-            tokens = tokens[:max_tokens]
-            break
-    return encoding.decode(tokens)
-
-# Function to generate embeddings for a list of texts using OpenAI API (batch processing)
 def embed_texts(texts):
-    truncated_text = truncate_texts(texts)
-    response = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=[truncated_text]
-    )
-    return [item.embedding for item in response.data]
+    if not texts:
+        return []
+    try:
+        response = client.embeddings.create(model="text-embedding-3-small", input=texts)
+        return [item.embedding for item in response.data]
+    except Exception as e:
+        print(f"Error in embed_texts: {e}")
+        return []
 
-# Function to preprocess and embed each field
-def preprocess_and_embed(skills_list):
-    if len(skills_list) == 0:
-        return np.zeros((1536,))  # Adjust the dimension according to the model's output
+
+def preprocess_and_embed_individual_skills(skills_string):
+    if not skills_string or pd.isna(skills_string):
+        return []
+
+    try:
+        skills_list = ast.literal_eval(skills_string)
+    except:
+        skills_list = [s.strip() for s in skills_string.split(",") if s.strip()]
+
+    if not skills_list:
+        return []
+
     embeddings = embed_texts(skills_list)
-    return np.mean(embeddings, axis=0)  # Average the embeddings for the list
+    return list(zip(skills_list, embeddings))
 
-# Generate and save embeddings to CSV
+
 def generate_and_save_embeddings(df, column_name, file_name):
-    embeddings = []
-    skills_lists = df[column_name].tolist()
-    for idx, skills_list in tqdm(enumerate(skills_lists), total=len(skills_lists)):
+    all_skills_embeddings = []
+    skills_strings = df[column_name].tolist()
+    for idx, skills_string in tqdm(
+        enumerate(skills_strings), total=len(skills_strings)
+    ):
         try:
-            if isinstance(skills_list, list):
-                embedding = preprocess_and_embed(skills_list)
-            else:
-                embedding = embed_texts([skills_list])[0]
+            skill_embeddings = preprocess_and_embed_individual_skills(skills_string)
+            all_skills_embeddings.extend(skill_embeddings)
         except Exception as e:
             print(f"Error processing index {idx}: {e}")
-            embedding = np.zeros((1536,))  # Use a zero vector in case of error
-        embeddings.append(embedding)
-    embeddings_df = pd.DataFrame(embeddings)
-    embeddings_df.to_csv(file_name, index=False)
-    return embeddings_df
 
-# Assuming jobs_df is already defined and populated with job data
-# hard_skills_embeddings_df = generate_and_save_embeddings(jobs_df, 'hard_skills', 'data/embeddings/hard_skills_embeddings.csv')
-tech_stack_embeddings_df = generate_and_save_embeddings(jobs_df, 'tech_stack', 'data/embeddings/tech_stack_embeddings.csv')
-soft_skills_embeddings_df = generate_and_save_embeddings(jobs_df, 'soft_skills', 'data/embeddings/soft_skills_embeddings.csv')
-industries_embeddings_df = generate_and_save_embeddings(jobs_df, 'industries', 'data/embeddings/industries_embeddings.csv')
+    # Create DataFrame with individual skills and their embeddings
+    skills_df = pd.DataFrame(all_skills_embeddings, columns=["skill", "embedding"])
+    skills_df["embedding"] = skills_df["embedding"].apply(
+        lambda x: ",".join(map(str, x))
+    )
+    skills_df.to_csv(file_name, index=False)
+    return skills_df
+
+
+# Usage example
+def main():
+    df = pd.read_csv("data/full_data.csv")
+    column_name = "hard_skills"
+    output_file = f"data/{column_name}_embeddings.csv"
+
+    skills_df = generate_and_save_embeddings(df, column_name, output_file)
+    print(f"Individual skill embeddings saved to {output_file}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,12 @@
+These commands are for mostly for updating the pipeline
+and one command is for recovering BigQuery data.
+
+- Set secret:
+
 kubectl create secret generic gbq --from-file=gbq.json=./keys/gbq.json
 
+
+- Update containers:
 
 cd collect_job_listings
 docker build -t gcr.io/techlistme/collect-job-listings:latest .
@@ -26,33 +33,22 @@ docker build -t gcr.io/techlistme/extract-gemini:latest .
 docker push gcr.io/techlistme/extract-gemini:latest
 cd ..
 
-kubectl apply -f .\k8s\ --recursive --dry-run=client
+
+- Apply changes
 
 kubectl apply -f .\k8s\ --recursive
 
-pipeline order: 
-job-01-collect-job-listings
-job-02-clean-duplicate-ids
-job-03-enrich-job-listings
-job-04-clean-duplicate-descriptions
-job-05-extract-gemini
 
+- Apply configmap
 
-how to recover big query table from an hour ago
-command:
-bq cp techlistme:raw_data.jobs@-3600000 techlistme:raw_data.jobs_recovered
-
-
-how to apply configmap
-
+cd k8s/jobs
 kubectl create configmap job-01-collect-job-listings --from-file=01-collect-job-listings.yaml -o yaml | kubectl apply -f -
 kubectl create configmap job-02-clean-duplicate-ids --from-file=02-clean-duplicate-ids.yaml -o yaml | kubectl apply -f -
 kubectl create configmap job-03-enrich-job-listings --from-file=03-enrich-job-listings.yaml -o yaml | kubectl apply -f -
 kubectl create configmap job-04-clean-duplicate-descriptions --from-file=04-clean-duplicate-descriptions.yaml -o yaml | kubectl apply -f -
 kubectl create configmap job-05-extract-gemini --from-file=05-extract-gemini.yaml -o yaml | kubectl apply -f -
 
-kubectl create configmap job-01-collect-job-listings --from-file=01-collect-job-listings.yaml --dry-run=client -o yaml | kubectl apply -f -
-kubectl create configmap job-02-clean-duplicate-ids --from-file=02-clean-duplicate-ids.yaml --dry-run=client -o yaml | kubectl apply -f -
-kubectl create configmap job-03-enrich-job-listings --from-file=03-enrich-job-listings.yaml --dry-run=client -o yaml | kubectl apply -f -
-kubectl create configmap job-04-clean-duplicate-descriptions --from-file=04-clean-duplicate-descriptions.yaml --dry-run=client -o yaml | kubectl apply -f -
-kubectl create configmap job-05-extract-gemini --from-file=05-extract-gemini.yaml --dry-run=client -o yaml | kubectl apply -f -
+
+- Recover BigQuery table from an hour ago
+
+bq cp techlistme:raw_data.jobs@-3600000 techlistme:raw_data.jobs_recovered
