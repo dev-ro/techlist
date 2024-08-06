@@ -5,3 +5,4 @@ data/embeddings
 keys/*
 full_data.csv
 *_embeddings.csv
+*_embeddings_sample.csv
