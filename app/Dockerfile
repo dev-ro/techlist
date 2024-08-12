@@ -18,8 +18,11 @@ RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt &
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
+# Use a shell script to start Streamlit with the correct port
+RUN echo '#!/bin/bash\n\
+PORT="${PORT:-8080}"\n\
+streamlit run --server.port=$PORT --server.address=0.0.0.0 app.py' > /app/start.sh && \
+chmod +x /app/start.sh
 
-# Run streamlit app on port 8080
-CMD ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
+# Run the start script
+CMD ["/app/start.sh"]
