@@ -89,6 +89,8 @@ The data extraction pipeline is deployed on Google Kubernetes Engine and execute
 5. extract_gemini - This step is extracting the keywords from the job descriptions with Google Gemini API and putting it into the extracted_data.jobs table, used for the website.
 6. clean_duplicate_descrptions - This container also has a method for cleaning up the raw_data.jobs table if the job keywords have been extracted, so it runs again as a final step.
 
+The k8s/ directory is for the GKE pipeline.
+
 ## Note on Data and Credentials
 
 The application is designed to work with BigQuery and not local data files. Access to the full functionality requires appropriate GCP credentials and BigQuery setup, which are not provided in this repository for security reasons. A 100-row sample of the dataset is provided at data/sample.csv
